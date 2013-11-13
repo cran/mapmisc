@@ -1,0 +1,23 @@
+export(scaleBar,map.new,legendBreaks)
+export(colourScale)
+S3method(colourScale, Raster)
+S3method(colourScale, numeric)
+S3method(colourScale, factor)
+
+export(openmap, getTiles, osmTiles,insetMap)
+# functions depending on geonames
+importFrom(geonames, GNcities)
+export( GNcities)
+
+
+importFrom(RColorBrewer, brewer.pal)
+importFrom(classInt, classIntervals)
+
+import(
+  sp,
+  raster,
+  rgdal
+  )
+
+ 
+
