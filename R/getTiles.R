@@ -2,6 +2,11 @@
 ###  lancs =  getTiles(c(-2.842,-2.7579),c(54.0295,54.063),12,path="http://tile.openstreetmap.org/",maxTiles=60,verbose=TRUE)
 ###
 
+#  crsMerc =CRS("+init=epsg:3857") # mercator projection
+crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs")
+# crsLL = CRS("+epsg:4326")
+
+
 .tile2boundingBox <- function(x,y,zoom){
 
   n = .tile2lat(y,zoom)
@@ -21,8 +26,11 @@
 	lat_rad = atan(sinh(pi * (1 - 2 * c(J+1,J) / n)))
 	lat_deg = lat_rad * 180.0 / pi
 
-	thePoints = SpatialPoints(cbind(lon_deg, lat_deg), CRS("+init=epsg:4326"))
-	thePointsMerc = spTransform(thePoints, CRS("+init=epsg:3857")	)
+	eps=1e-8
+	thePoints = raster(extent(lon_deg[1], xmax=lon_deg[2],
+					ymin=lat_deg[1],ymax=lat_deg[2]), 
+				crs=crsLL)
+	thePointsMerc = projectExtent(thePoints, crsMerc	)
 
 	extent(thePointsMerc)			
 }
@@ -96,9 +104,8 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     localStore = TRUE
   }
 
-  thecrs =CRS("+init=epsg:3857") # mercator projection
+  thecrs = crsMerc
   
-
   colourtable = NULL
   for(ip in 1:length(tileData)){
    p = tileData[[ip]]$path
@@ -109,10 +116,14 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			   timeOut=timeOut,
 			  verbose=verbose)
     }
-	
-	thisimage = brick(where)
+	if(file.info(where)$size) {
+		thisimage = brick(where)
+	} else {
+		thisimage = NULL
+	}
+	if(!is.null(thisimage)) {
 
-	# if only one layer
+		# if only one layer
 	# this must be a raster of integers referring to colour indexes	
 	if(nlayers(thisimage)==1) {
 		thisimage=thisimage[[1]]
@@ -136,11 +147,11 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 				sep="")
 	} 
 	
-	
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
 	
 	rasters[[ip]] = thisimage
+	} # end not rtry error
 
 	
 	}
@@ -149,8 +160,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		thenames = names(rasters[[1]])
 		rasters = do.call(merge, rasters)
 		names(rasters) = thenames			
-	} else {
+	} else if(length(rasters)==1){
 		rasters = rasters[[1]]
+	} else { # no tiles found
+		rasters = NULL
 	}
 	if(!is.null(colourtable)) {
  		# re-order colours so most common colours are first
@@ -165,8 +178,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		rasters@legend@colortable = names(colourtable)[
 				as.integer(names(thetable))+1]
 
-	}  
+	}
+	
 	return(rasters)	
+	
 }
 	
 

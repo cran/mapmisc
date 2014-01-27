@@ -2,19 +2,19 @@
 ## ----setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE-----------
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
-		dev='png', res=36,
+		dev='png', 
 		fig.align='center',fig.pos='H',width=80,
 		fig.height=5,fig.width=3,out.width="0.3\\textwidth"
 )
 par(bg="white")
-library(mapmisc)
-library(rgdal)
+library('mapmisc')
+library('rgdal')
 
 
 ## ----meusedata,echo=TRUE-------------------------------------------------
-library('mapmisc')
-library(sp)
-data(meuse)
+library('sp')
+library('rgdal')
+data('meuse')
 coordinates(meuse) <- ~x+y
 proj4string(meuse) <- CRS("+init=epsg:28992")
 class(meuse)
@@ -22,6 +22,7 @@ class(meuse)
 
 ## ----elevation,eval=FALSE------------------------------------------------
 ## meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
+## library('raster')
 ## getData("SRTM", lon=xmin(extent(meuseLL)),
 ## 	lat=ymin(extent(meuseLL)),path=tempdir())
 ## nldElev = raster(paste(tempdir(), "/", "srtm_38_02.tif", sep=""))
@@ -30,7 +31,8 @@ class(meuse)
 
 
 ## ----dataneth------------------------------------------------------------
-data(netherlands)
+library('mapmisc')
+data('netherlands')
 
 
 ## ----classElev-----------------------------------------------------------
@@ -39,6 +41,7 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 
 
 ## ----openmap,eval=FALSE--------------------------------------------------
+## library('mapmisc')
 ## nldTiles = openmap(meuse)
 
 
@@ -140,8 +143,7 @@ elevScale = colourScale(nldElev, style='equal',
 ## ----soilScale-----------------------------------------------------------
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
 		labels=c("Calcareous","Non-Calc's","Red Brick"))
-soilScale = colourScale(meuse$soilFac, style="unique",
-		col="Set2")
+soilScale = colourScale(meuse$soilFac, col="Set2")
 
 
 ## ----meuseLegends,fig.subcap=c("Copper","soil", "elevation"), fig.cap="Meuse data again"----
@@ -150,7 +152,7 @@ plot(nldTiles, add=TRUE)
 plot(meuse, col=cuScale$plot,add=TRUE,pch=16)
 scaleBar(meuse, pos="topleft",bg="white")
 legendBreaks("bottomright",  breaks=cuScale,
-		title="gals/firkin",bg="white",adj=c(0,-2))
+		title="gals/firkin")
 
 
 map.new(meuse)
