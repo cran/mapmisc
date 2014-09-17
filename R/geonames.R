@@ -8,7 +8,6 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	theproj = projection(north)
 	if(!fourCoords) {
 		extLL = .extentLL(north)
-
 		
 		east = xmax(extLL)
 		west = xmin(extLL)
@@ -17,15 +16,23 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 		
 	}
 
+	if (requireNamespace("geonames", quietly = TRUE)) { 
+		
 	result = geonames::GNcities(north=north,east=east,
 			south=south,west=west,lang,maxRows)
 
-	result = SpatialPointsDataFrame(result[,c("lng","lat")], data=result, 
+	result = SpatialPointsDataFrame(cbind(
+					as.numeric(result[,'lng']),
+					as.numeric(result[,'lat'])
+					), data=result, 
 			proj4string=crsLL)
+} else {
+	warning("install the geonames package to use GNcities")
+	result = NULL
+}
 
 	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
-		havegdal = require(rgdal, quietly=TRUE )
-		if(havegdal)
+		if(require('rgdal', quietly=TRUE ))
 			result = spTransform(result, CRSobj=CRS(theproj))
 	}
 		
@@ -34,6 +41,8 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 
 GNsearch = function(...) {
 	
+	
+	if (requireNamespace("geonames", quietly = TRUE)) { 
 	result=geonames::GNsearch(...)
 	
 	if(all(c("lat","lng") %in% names(result))){
@@ -44,5 +53,10 @@ GNsearch = function(...) {
 				 data=result, 
 				proj4string=crsLL)
 	}
+} else {
+	warning("install the geonames package to use GNsearch")
+	result = NULL
+	
+}
 	result
 }

@@ -30,7 +30,7 @@ crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 
 	thePoints = raster(extent(lon_deg[1], xmax=lon_deg[2],
 					ymin=lat_deg[1],ymax=lat_deg[2]), 
 				crs=crsLL)
-	thePointsMerc = projectExtent(thePoints, crsMerc	)
+	thePointsMerc = projectExtent(thePoints, crsMerc)
 
 	extent(thePointsMerc)			
 }
@@ -61,6 +61,8 @@ crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 
 nTiles <- function(xlim,ylim,zoom){
   tb = .getTileBounds(xlim,ylim,zoom)
   nt = (tb[[2]][1]-tb[[1]][1]+1)*(tb[[1]][2]-tb[[2]][2]+1)
+  if(!is.finite(nt))
+	  nt = Inf
   return(nt)
 }
 
@@ -95,7 +97,6 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     stop("Cant get ",nt," tiles with maxTiles set to ",maxTiles)
   }
   tileData = getTilePaths(xlim,ylim,zoom,path)
-  rasters = list()
   localStore = FALSE
   if(file.exists(path)){
     if(!file.info(path)$isdir){
@@ -106,6 +107,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 
   thecrs = crsMerc
   
+  rasters = list()
   colourtable = NULL
   for(ip in 1:length(tileData)){
    p = tileData[[ip]]$path
@@ -117,7 +119,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			  verbose=verbose)
     }
 	if(file.info(where)$size) {
-		thisimage = brick(where)
+		thisimage = raster::brick(where)
 	} else {
 		thisimage = NULL
 	}
@@ -126,16 +128,14 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		# if only one layer
 	# this must be a raster of integers referring to colour indexes	
 	if(nlayers(thisimage)==1) {
-		thisimage=thisimage[[1]]
 		newcolours = thisimage@legend@colortable
+		thisimage=thisimage[[1]]
 		if(length(newcolours)) {
-			newcolours = newcolours[!newcolours %in% names(colourtable)]
-			toadd = seq(length(colourtable), len=length(newcolours),by=1)
-			names(toadd) = newcolours
-			colourtable = c(colourtable, toadd)
-			newvalues = colourtable[thisimage@legend@colortable]
-		
-			values(thisimage) = newvalues[values(thisimage)+1]
+			if(any(is.na(values(thisimage)))) {
+				newcolours[1] = NA
+			}
+			thisimage = thisimage + length(colourtable)
+			colourtable = c(colourtable, newcolours)
 		}
 		names(thisimage) = gsub("^http://|/$", "", path)
 	} else if (nlayers(thisimage)>1){
@@ -149,7 +149,9 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
-	
+	if(length(colourtable)) {
+		thisimage@legend@colortable = colourtable
+	}
 	rasters[[ip]] = thisimage
 	} # end not rtry error
 
@@ -158,26 +160,19 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 
 	if(length(rasters) > 1) {
 		thenames = names(rasters[[1]])
-		rasters = do.call(merge, rasters)
+		rasters = do.call(raster::merge, rasters)
 		names(rasters) = thenames			
 	} else if(length(rasters)==1){
 		rasters = rasters[[1]]
 	} else { # no tiles found
 		rasters = NULL
 	}
-	if(!is.null(colourtable)) {
+	if( !is.null(colourtable)) {
  		# re-order colours so most common colours are first
-		thetable = sort(table(values(rasters)),decreasing=TRUE)
-		newvalues = rep(NA, length(colourtable))
-		names(newvalues) = as.character(seq(0,by=1,len= length(colourtable)))
-		newvalues[names(thetable)] = seq(0,by=1,len=length(thetable))
-			
-		values(rasters) = newvalues[values(rasters)+1]
-		newvalues = newvalues[!is.na(newvalues)]
-		
-		rasters@legend@colortable = names(colourtable)[
-				as.integer(names(thetable))+1]
-
+		newtable = unique(colourtable)
+		tomatch = match(colourtable,newtable)
+		rasters@legend@colortable = newtable
+		values(rasters) = tomatch[values(rasters)+1]-1
 	}
 	
 	return(rasters)	

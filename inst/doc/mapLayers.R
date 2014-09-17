@@ -1,10 +1,8 @@
-
 ## ----setup,include=FALSE-------------------------------------------------
 
 library('knitr')
 library('mapmisc')
 library('raster')
-library('rgdal')
 
 reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 
@@ -18,7 +16,6 @@ library('mapmisc')
 theNames = names(osmTiles())
 africaExtent = c(15, 25)
 trafalgarSquare=c(-0.128056,51.508056)
-
 
 ## ----downloadTiles,include=FALSE-----------------------------------------
 if(reRun) {
@@ -40,7 +37,6 @@ if(file.exists("../inst/extdata"))
 } else {
 	load(system.file("extdata", "tiles.RData", package = "mapmisc"))
 }
-
 
 ## ----someTiles,dev='png', out.width="\\textwidth",echo=FALSE,results='asis',fig.height=5,fig.width=5----
 
@@ -108,6 +104,5 @@ for(D in theNames){
 	
 	
 }
-
 
 

@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NULL, verbose=FALSE)
+	crs=NA, verbose=FALSE)
 	getTiles(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE)
 	osmTiles(name)
@@ -100,7 +100,8 @@ http://wiki.openstreetmap.org/index.php/Tile_usage_policy
 \examples{
 
 
-myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
+myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
+  crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
@@ -109,7 +110,7 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 names(osmTiles())
 
 \dontrun{
-	par(mar=c(0,0,0,0))
+
 	mytiles = openmap(myraster)
 
 	map.new(myraster)

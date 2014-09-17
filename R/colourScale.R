@@ -7,7 +7,20 @@ UseMethod("colourScale")
 
 }
 
-colourScale.factor = function(x, breaks=5, 
+colourScale.character =   function(x, breaks=5, 
+		style=c("quantile","equal","unique", "fixed"),
+		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+
+	x = factor(x)
+	
+	colourScale(x, breaks=5, 
+	style=c("quantile","equal","unique", "fixed"),
+	col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+	transform=NULL, revCol=FALSE, exclude=NULL, ...)
+}
+
+ colourScale.factor = function(x, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
@@ -59,7 +72,11 @@ colourScale.numeric = function(x, breaks=5,
 	if(!is.function(col)){		
 		colString = col
 		if(length(colString)==1){
-			col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
+			if(requireNamespace('RColorBrewer',quietly=TRUE)) {
+				col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
+			} else {
+				col = function(n) heat.colors(n)[1:n]
+			}
 		} else {
 			col = function(n) colString[1:n]
 		}
@@ -155,8 +172,12 @@ colourScale.numeric = function(x, breaks=5,
 				}					
 				breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks)
 			} else {
-				breaks = classInt::classIntervals(x, n=breaks, 
+				if (requireNamespace("classInt", quietly = TRUE)) { 
+					breaks = classInt::classIntervals(x, n=breaks, 
 						style=style, ...)$brks
+				} else {
+					warning("Install the classInt package to use style=", style)
+				}
 			}
 		
 			

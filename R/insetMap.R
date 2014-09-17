@@ -3,9 +3,6 @@ insetMap = function(crs, pos="bottomright",map="osm",zoom=0,
 		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
 		outer=TRUE) {
 
-crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
-	
-	
 fromEdge = matrix(par("plt"), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
 extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
@@ -61,21 +58,36 @@ if(class(crsCrop)=="try-error")
 tocrop = t(bbox(extent(cropInset)))
 tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
-tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
-map = crop(map, extent(tocrop))
+if(requireNamespace('rgdal', quietly=TRUE)) {
+	tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
+	map = crop(map, extent(tocrop))
+}
 
 
-
-
-xpoints = t(bbox(extentBig))
-boxsize = abs(apply(xpoints, 2, diff))	
 oldinsetbox = t(bbox(map))
 oldrange = apply(oldinsetbox, 2, diff)
-newxrange = boxsize[1]*width
-cellRatio = res(area(map))
-newyrange = newxrange * (cellRatio[1]/cellRatio[2])*(oldrange[2]/oldrange[1])
+oldYoverX = oldrange[2]/oldrange[1]
+
+
+newxrange = diff(par("usr")[1:2])*width
+
+
+plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
+
+plotFracYinches= exp(diff(log(par('pin'))))
+
+if(length(grep("longlat", projection(map)))) {
+	cellRatio = res(area(map))
+	cellRatio = cellRatio[1]/cellRatio[2]
+} else {
+	cellRatio = 1
+}
+newyrange = newxrange * cellRatio* oldYoverX * plotFracYcoords / plotFracYinches 
+
 
 	if(is.character(pos)) {
+		xpoints = t(bbox(extentBig))
+
 x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
 
 if(length(grep("^top",pos)))
@@ -91,6 +103,7 @@ if(length(grep("left$",pos)))
 
 
 
+
 mapOrig = map
 extent(map)= extent(c(x[1], x[1]+newxrange, x[2], 
 				x[2]+newyrange))
@@ -100,12 +113,11 @@ bbSmall = t(bbox(extent(map)))
 
 
  
-
+if(requireNamespace('rgdal', quietly=TRUE)) {
+	
 xsp = spTransform(xsp, 
 		CRSobj=CRS(proj4string(mapOrig)))
-
- 
-
+}
 
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 

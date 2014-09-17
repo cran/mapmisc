@@ -1,7 +1,7 @@
 osmTiles = function(name) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
-			"osm-no-labels"="http://www.toolserver.org/tiles/osm-no-labels/",
+#			"osm-no-labels"="http://a.www.toolserver.org/tiles/osm-no-labels/",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
 			"bw-mapnik"="www.toolserver.org/tiles/bw-mapnik",
 			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
@@ -25,15 +25,16 @@ osmTiles = function(name) {
 	
 	
 	toolserver = c("parking-bw", "osm-locale-de","bw-noicons")
-	toadd =	paste("www.toolserver.org/tiles/", toolserver,"/", sep="")
+	toadd =	paste("http://www.toolserver.org/tiles/", toolserver,"/", sep="")
 	names(toadd) = toolserver
 	result = c(result, toadd)
 	
-	
+
+	# language labels don't appear to be working
 	languages = c("en","fr","de", "it","es","ru")
-	toadd =	paste("www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
+	toadd =	paste("http://a.www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
 	names(toadd) = paste("osm-labels-", languages, sep="")
-	result = c(result, toadd)
+#	result = c(result, toadd)
 	
 	stamen = c("toner","watercolor")#,"terrain","terrain-background")
 	toadd = paste("http://tile.stamen.com/", stamen, "/",sep="")
@@ -57,7 +58,7 @@ osmTiles = function(name) {
 openmap = function(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NULL,  
+	crs=NA,  
 	verbose=FALSE) {
 
 
@@ -77,6 +78,10 @@ openmap = function(x, zoom,
 	names(pathOrig) = path
 
 	extLL = .extentLL(x,crs)
+
+		
+	if(any(abs(as.vector(extLL))>181))
+		warning("no CRS supplied and coordinates do not appear to be long-lat")
 		
 	xlim= c(xmin(extLL), xmax(extLL))
 	ylim = c(ymin(extLL), ymax(extLL))
@@ -91,10 +96,7 @@ openmap = function(x, zoom,
 	if(verbose) cat("zoom is ", zoom, ", ", nTiles(xlim, ylim, zoom), "tiles\n")
 
 	result = NULL
-	
-
-	
-	for(Dpath in path) {
+	for(Dpath in rev(path)) {
 		thistile = try(
 				getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
@@ -109,25 +111,32 @@ openmap = function(x, zoom,
 				names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
 					names(thistile),fixed=TRUE)		
 			}
-		if(length(result)) {			
-			result =  stack(result, thistile)	
-		} else {
-			result = thistile
-		}
-	} # end not try-error
-	}	
 
+		ctable = NULL
+		if(!is.null(thistile)) {
+			if(nlayers(thistile)==1)
+				ctable = thistile@legend@colortable
+		}
+		
+		result =  stack(thistile, result)	
+		if(length(ctable))
+			result[[1]]@legend@colortable = ctable
+		
+		} # end not try-error
+	} # end loop through path	
+
+	
 	if(is.null(result)) {
 		result = raster(extLL,1,1,crs=crsLL)
 		values(result) = NA
 	} 
 
-	
 	crsOut=crs
-	if(!length(crsOut))
+	if(is.na(crsOut))
 		crsOut = projection(x)
 	
-	if(!identical(projection(crsOut) , "NA") & !identical(crsOut, NA)){
+	if(!is.na(crsOut)  ){
+
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
 		pointsNew = projectExtent(result, 
@@ -139,25 +148,16 @@ openmap = function(x, zoom,
 
 	
 	resultProj = stack(resultProj)
+#	resultProj@legend@colortable = result@legend@colortable
 
-	for(D in 1:nlayers(resultProj)) {
-		thelen = length(result[[D]]@legend@colortable)
-		if(thelen) {
-			thevalues = values(resultProj[[D]])
-			thevalues[is.na(thevalues)] = thelen
-			values(resultProj[[D]]) = thevalues
-			
+
+	for(D in names(resultProj)) {
 			resultProj[[D]]@legend@colortable =
-				c(result[[D]]@legend@colortable, NA)
-		}
+					result[[D]]@legend@colortable
 	}
+
 	
-	names(resultProj) = names(result)
-	
-	if(nlayers(resultProj)==1) {
-		resultProj = resultProj[[1]]
-	}
-	
+
 	
 	resultProj
 }
