@@ -335,8 +335,8 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 
 ## ----openmapInfo---------------------------------------------------------
 class(nldTiles)
-proj4string(nldTiles)
-proj4string(meuse)
+projection(nldTiles)
+projection(meuse)
 
 ## ----cities,eval=FALSE---------------------------------------------------
 #  nldCities = GNcities(meuse, maxRows=6)
@@ -344,7 +344,7 @@ proj4string(meuse)
 ## ----citiesInfo----------------------------------------------------------
 class(nldCities)
 names(nldCities)
-proj4string(nldCities)
+projection(nldCities)
 
 ## ----simpleMap,fig.cap="simple map", fig.subcap=c("data locations","cities","elevation")----
 # plot the data locations

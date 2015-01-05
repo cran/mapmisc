@@ -32,7 +32,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 }
 
 	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
-		if(require('rgdal', quietly=TRUE ))
+		if(requireNamespace('rgdal', quietly=TRUE ))
 			result = spTransform(result, CRSobj=CRS(theproj))
 	}
 		
@@ -46,8 +46,11 @@ GNsearch = function(...) {
 	result=geonames::GNsearch(...)
 	
 	if(all(c("lat","lng") %in% names(result))){
-		coords = result[,c("lng","lat"),drop=FALSE]
+		coords = as.matrix(result[,c("lng","lat"),drop=FALSE])
 		mode(coords) = 'numeric'
+
+		result$population = as.numeric(result$population)
+		
 		result = SpatialPointsDataFrame(
 				coords,
 				 data=result, 
