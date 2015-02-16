@@ -1,5 +1,88 @@
 
-legendBreaks = function(pos, breaks, outer=TRUE,...){
+legendBreaks = function(pos,
+    breaks,
+    col=breaks$col,
+    legend=breaks$breaks,
+    rev=TRUE,
+    outer=TRUE,
+    pch=15,
+    cex=par('cex'),
+    pt.cex=2.5*cex,
+    inset=0.05,
+    text.col=par('fg'),
+    title.col=text.col,
+    adj=0,
+    ...){
+  
+  if(rev){
+    col=rev(col)
+    legend=rev(legend)
+  }
+  
+  if(length(col) == (length(legend)-1)) {
+    col = c(NA, col)
+  }
+  
+  pch = c(NA,
+      pch[round(seq(1, length(pch), len=length(legend)-1))]
+  )
+  
+  # get rid of transparency in col
+  withTrans = grep("^#[[:xdigit:]]{8}$", col)
+  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col)
+
+  if(outer){
+    oldxpd = par("xpd")
+    par(xpd=NA)
+    fromEdge = matrix(par("plt"), 2, 2, 
+        dimnames=list(c("min","max"), c("x","y")))
+    propIn = apply(fromEdge, 2, diff)
+    if(is.character(pos)) {
+      forInset = c(0,0)
+      if(length(grep("left$", pos))){
+        forInset[1] = -fromEdge["min","x"]					
+      } else if(length(grep("right$", pos))){
+        forInset[1] = fromEdge["max","x"]-1					
+      }
+      if(length(grep("^top", pos))){
+        forInset[2] = -fromEdge["min","y"]					
+      } else if(length(grep("^bottom", pos))){
+        forInset[2] = fromEdge["max","y"]-1					
+      }
+      
+      inset = forInset/propIn + inset
+    }
+  }
+  
+  result=legend(
+      pos,
+      legend=legend,
+      col=col,
+      pch=pch,
+      pt.cex=pt.cex,
+      inset=inset,
+      cex=cex,
+      text.col='#FFFFFF00',
+      ...
+      )
+      
+      diffy = diff(result$text$y)/2
+      diffy = c(diffy,diffy[length(diffy)])
+      result$text$y = result$text$y + diffy
+      
+      if(par("xlog")) result$text$x = 10^result$text$x
+      if(par("ylog")) result$text$y = 10^result$text$y
+      
+      
+      text(result$text$x, result$text$y,
+          legend, col=text.col,adj=adj)   
+      
+      par(xpd=oldxpd)
+      
+      return(invisible(result))
+}
+
+legendBreaksOld = function(pos, breaks, outer=TRUE,...){
 	ldots = list(...)
 
 	defaults = list(pch=15,  x=pos,bg="white",
