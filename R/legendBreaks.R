@@ -1,35 +1,105 @@
 
 legendBreaks = function(pos,
     breaks,
-    col=breaks$col,
-    legend=breaks$breaks,
+    col,
+    legend,
     rev=TRUE,
     outer=TRUE,
     pch=15,
+    bg=par('bg'),
     cex=par('cex'),
     pt.cex=2.5*cex,
-    inset=0.05,
     text.col=par('fg'),
+    title=NULL,
+    inset=0.05,
     title.col=text.col,
     adj=0,
+    y.intersp,
     ...){
+
+  if(!missing(breaks)){
+    if(is.factor(breaks)){
+      # if it's a raster
+      if(length(grep("^Raster",class(breaks)))){
+        breaks = levels(breaks)[[1]]
+      } else {
+        breaks=list(legend=levels(breaks))
+      }
+    }
+  }
   
+  if( missing(legend) & missing(breaks))
+    warning("legend or breaks must be supplied")
+  if(missing(legend)&!missing(breaks)) {
+    if(is.list(breaks)){
+        legendCol = intersect(
+            c('legend','label','level','breaks','ID'),
+              names(breaks)
+          )
+          if(!length(legendCol)){
+            warning("can't find legend in breaks")
+          }
+          legend = breaks[[ legendCol[1] ]]
+    } else { # breaks isn't a list (or df)
+      legend=breaks
+    }
+  }
+  
+  if(missing(col)){
+    col='black'
+      if(!missing(breaks)) {
+        if(is.list(breaks)) {
+          if(any(names(breaks)=='col'))
+            col = breaks[['col']]
+        }
+      }
+  }
+    
   if(rev){
     col=rev(col)
     legend=rev(legend)
   }
   
   if(length(col) == (length(legend)-1)) {
+    # one more legend item than colours
     col = c(NA, col)
+    pch = c(NA,
+        pch[round(seq(1, length(pch), len=length(legend)-1))]
+    )
+    diffyMult=1
+    theTextCol = '#FFFFFF00'
+  } else { # same number of colours as legend entries
+    theTextCol = text.col
+    # get rid of entries where col is NA
+    theNA = is.na(col)
+    if(any(theNA)){
+      col = col[!theNA]
+      legend = legend[!theNA]
+    }
   }
   
-  pch = c(NA,
-      pch[round(seq(1, length(pch), len=length(legend)-1))]
-  )
-  
+
+if(missing(y.intersp)){
+  y.intersp = gregexpr("\n", 
+              as.character(legend)
+          )
+y.intersp=max(
+    unlist(lapply(y.intersp, function(qq) sum(qq>0)))
+)
+if(all(is.na(y.intersp))){
+  y.intersp=0
+}
+if(y.intersp>0){
+  y.intersp = 1.5
+} else {
+  y.intersp=1
+}
+} 
+
+
   # get rid of transparency in col
   withTrans = grep("^#[[:xdigit:]]{8}$", col)
-  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col)
+  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col[withTrans])
 
   if(outer){
     oldxpd = par("xpd")
@@ -53,21 +123,28 @@ legendBreaks = function(pos,
       inset = forInset/propIn + inset
     }
   }
-  
+
   result=legend(
       pos,
-      legend=legend,
+      legend=as.character(legend),
+      bg=bg,
       col=col,
       pch=pch,
       pt.cex=pt.cex,
       inset=inset,
       cex=cex,
-      text.col='#FFFFFF00',
+      text.col=theTextCol,
+      title.col=title.col,
+      title=title,
+      y.intersp=y.intersp,
       ...
       )
       
+      if(text.col != theTextCol) {
       diffy = diff(result$text$y)/2
-      diffy = c(diffy,diffy[length(diffy)])
+      diffy = c(
+          diffy,diffy[length(diffy)]
+          )*diffyMult
       result$text$y = result$text$y + diffy
       
       if(par("xlog")) result$text$x = 10^result$text$x
@@ -76,7 +153,7 @@ legendBreaks = function(pos,
       
       text(result$text$x, result$text$y,
           legend, col=text.col,adj=adj)   
-      
+    }      
       par(xpd=oldxpd)
       
       return(invisible(result))

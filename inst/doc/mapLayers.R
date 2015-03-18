@@ -10,9 +10,9 @@ reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 if( Sys.info()['user'] =='patrick') {
 	opts_chunk$set(dpi=72,dev.args=list(bg='white'))	
 }else{	
-	opts_chunk$set(dpi=24,dev.args=list(bg='white'))	
+	opts_chunk$set(dpi=36,dev.args=list(bg='white'))	
 }
-library('mapmisc')
+
 theNames = names(osmTiles())
 africaExtent = c(15, 25)
 trafalgarSquare=c(-0.128056,51.508056)
@@ -34,7 +34,7 @@ if(file.exists("../inst/extdata"))
 	save(africaTiles, londonTiles,
 			file="../inst/extdata/tiles.RData",
 			compress="xz")
-} else {
+} else { # don't rerun
 	load(system.file("extdata", "tiles.RData", package = "mapmisc"))
 }
 
@@ -62,7 +62,8 @@ for(D in theNames){
 	cat("\\section[",D,"]{{\\tt plot","RGB"[threeTiles], 
 			"(openmap(x,path=\"", D, "\"))}}", sep='')
 	cat("\\label{", D, "}\n",sep="")
-	cat("\\nopagebreak[4]\\begin{tabular}{ccc}\n")
+  cat(openmapAttribution(D, 'latex'))
+	cat("\n\n\\nopagebreak[4]\\begin{tabular}{ccc}\n")
 	
 	
 	for(Dplot in 1:length(mytiles)) {

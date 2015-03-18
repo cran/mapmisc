@@ -1,5 +1,6 @@
 
-scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
+scaleBar = function(crs, pos="bottomright",
+    scale.cex=1,outer=TRUE,...) {
 
 	if(is.character(crs))
 		crs = CRS(crs)
@@ -44,14 +45,6 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 					proj4string=CRS(proj4string(xll))))
 	
 	
-	if(requireNamespace('rgdal', quietly=TRUE)) {	
-		xpoints2 = spTransform(xll[c("up","centre")], 
-			CRSobj=CRS(proj4string(xpoints)))
-} else{
-	xpoints2 = xll[c("up","centre")]			
-}
-	thediff=apply(coordinates(xpoints2), 2,diff)
-	north=atan(thediff[1]/thediff[2])
 	
 
 	dashdist = spDists(xll[c("centre","dashright"),], 
@@ -66,8 +59,6 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	segscale = ( strwidth(dashTemplate)/par("cxy")[1] ) *
 			segdist / dashdist
 	
-
-
 	
 	if(segdist >900) {
 		lunits="km"
@@ -97,13 +88,13 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
 			Im(theHat)
 	
-	theN = theN * exp(-1i*north)
-	theHat = theHat * exp(-1i*north)
 	
 	
-	
+if(scale.cex>0) {	
 	thelabel = paste(segdist, lunits,sep="")
-	
+} else {
+  thelabel=''
+}
 
 	
 	defaults = list(col='black', 
@@ -152,7 +143,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 			forLegend[[D]] = defaults[[D]]			
 	}
 	
-	forLegend$lty = 1
+	forLegend$lty = as.integer(segscale>0)
 	forLegend$pch = NA
 	forLegend$seg.len = segscale
 	forLegend$title=thelabel
@@ -166,14 +157,49 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	}
 
 		
-	thelegend = do.call(legend, forLegend)
+	thelegend = do.call(graphics::legend, forLegend)
 			
 	if(is.na(forLegend$title))
 		text(thelegend$text$x - (2/3)*strwidth("m")*forLegend$seg.len,
 				thelegend$rect$top , 
 				label=thelabel, pos=1, cex=0.75, offset=1.25)
 		
-	thecentre =  thelegend$text$x + 1i*thelegend$text$y
+  # if there's no scale bar or box and pos is numeric,
+# put the N at the point spcified
+  if(scale.cex<=0 & !nchar(forLegend$title) & all(forLegend$bty=='n') & is.numeric(forLegend$x)) {	
+    thecentre =  c(forLegend$x,forLegend$y)[1:2]
+  } else {
+    thecentre =  c(thelegend$text$x,thelegend$text$y)
+  }
+  
+  xpoints = SpatialPoints(t(thecentre),
+      proj4string=crs)
+  
+  if(requireNamespace('rgdal', quietly=TRUE)) {	
+    xll = spTransform(xpoints, crsLL)
+  } else {
+    xll= xpoints
+    if(!length(grep("longlat", projection(xpoints))))
+      warning('rgdal not intalled, assuming the plot is long-lat')
+  }
+  xll = rbind(xll,
+      SpatialPoints(
+          xll@coords+c(0,1),
+      proj4string=crsLL)
+  )
+  
+  if(requireNamespace('rgdal', quietly=TRUE)) {	
+    xpoints2 = spTransform(xll, crs)
+  } else{
+    xpoints2 = xll
+  }
+  thediff=apply(coordinates(xpoints2), 2,diff)
+  north=atan(thediff[1]/thediff[2])+pi*(thediff[2]<0)
+  
+  theN = theN * exp(-1i*north)
+  theHat = theHat * exp(-1i*north)
+  
+  thecentre = thecentre[1] + 1i*thecentre[2]
 	 polygon(forLegend$pt.cex*theN +thecentre, 
 			 col=forLegend$text.col,border=NA)
 	 polygon(forLegend$pt.cex*theHat + thecentre, 
@@ -181,5 +207,9 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	 
 	par(cex=oldcex)
 	 
-	 return(invisible(thelegend)	)
+	return(invisible(list(
+              out=thelegend, 
+              call=forLegend, 
+              centre=c(Re(thecentre),Im(thecentre))
+  )))
 }

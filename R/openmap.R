@@ -29,7 +29,6 @@ historical='http://www.openhistoricalmap.org/ohm_tiles/'
 	)
 	
 	
-
   
 
 	# language labels don't appear to be working
@@ -60,7 +59,7 @@ historical='http://www.openhistoricalmap.org/ohm_tiles/'
 openmap = function(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NA,
+	crs=projection(x),
   extend=0,
 	verbose=FALSE) {
 
@@ -103,7 +102,7 @@ openmap = function(x, zoom,
 		thistile = try(
 				getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
-				maxTiles=maxTiles,verbose=verbose),
+				verbose=verbose),
 		silent=TRUE	)
 
 		if(class(thistile)=="try-error"){
@@ -132,16 +131,19 @@ openmap = function(x, zoom,
 	if(is.null(result)) {
 		result = raster(extLL,1,1,crs=crsLL)
 		values(result) = NA
+    attributes(result)$openmap = list(
+        tiles=NA,
+        message=thistile,
+        path=path,
+        zoom=zoom
+        )
 	} 
 
 	crsOut=crs
-	if(is.na(crsOut))
-		crsOut = projection(x)
 	
 	if(!is.na(crsOut)  ){
-
+    
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
-
     
 	} else {
 		resultProj = result
@@ -153,17 +155,25 @@ openmap = function(x, zoom,
 
 
 	for(D in names(resultProj)) {
+      if(length(result[[D]]@legend@colortable)) {
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
+      if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
       # set NA's to transparent
-      resultProj[[D]]@legend@colortable[1] =
-          '#FFFFFF00'
+      resultProj[[D]]@legend@colortable =
+          c('#FFFFFF00',
+              resultProj[[D]]@legend@colortable 
+          )
+      values(resultProj[[D]]) = 1+values(resultProj[[D]])
 	}
+}
+}
 
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]
 		
-
+  attributes(resultProj)$tiles = attributes(thistile)$tiles
+  attributes(resultProj)$tiles$path = path
 	
 	resultProj
 }

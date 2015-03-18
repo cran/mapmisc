@@ -9,7 +9,7 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 if( Sys.info()['user'] =='patrick') {
 	opts_chunk$set(dpi=72)	
 }else{	
-	opts_chunk$set(dpi=24)	
+	opts_chunk$set(dpi=40)	
 }
 
 library('mapmisc')
@@ -403,16 +403,14 @@ legendBreaks("left", breaks=elevScale, title='Metres',bg="white")
 
 ## ----reproj,echo=TRUE----------------------------------------------------
 if(require('rgdal', quietly=TRUE)) {
-	rotatedCRS = CRS("+proj=omerc +lat_0=51 +lonc=5.75 +alpha=-50.0000000 +gamma=0.0 +k=1.000000 +x_0=500000.000 +y_0=0.000 +ellps=WGS84 +units=m")
-	tilesRot = projectRaster(nldTiles, crs=rotatedCRS, method='ngb')
-	tilesRot@legend@colortable = nldTiles@legend@colortable
-	elevRot = projectRaster(nldElev, crs=rotatedCRS)
-	meuseRot = spTransform(meuse, rotatedCRS)
+  meuseRot = spTransform(meuse, omerc(meuse, -50))
+	tilesRot = openmap(meuseRot)
+	elevRot = projectRaster(nldElev, crs=projection(meuseRot))
+  nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
 }
 
 ## ----reproj2,echo=FALSE--------------------------------------------------
 if(!require('rgdal', quietly=TRUE)) {
-	rotatedCRS = CRS(proj4string(meuse))
 	tilesRot = nldTiles
 	elevRot = nldElev
 	meuseRot = meuse
@@ -425,8 +423,8 @@ if(!require('rgdal', quietly=TRUE)) {
 map.new(meuseRot)
 plot(tilesRot, add=TRUE)
 plot(elevRot,add=TRUE,alpha=0.5,col=terrain.colors(8), legend=FALSE)
-points(nldCities)
-text(nldCities, labels=nldCities$name, pos=3)
+points(nldCitiesRot)
+text(nldCitiesRot, labels=nldCitiesRot$name, pos=3)
 
 scaleBar(meuseRot,pos="topleft", bg="white")
 
