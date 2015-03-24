@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps
-Version: 1.2.0
-Date: 2015-03-18
+Version: 1.2.1
+Date: 2015-03-24
 Depends: sp, raster, R (>= 3.0.0)
 Suggests: RColorBrewer, geonames, classInt, rgdal, knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca> [aut, cre],  Barry Rowlingson [ctb]
@@ -12,8 +12,8 @@ License: GPL
 VignetteBuilder: knitr
 Repository: CRAN
 Repository/R-Forge/Project: diseasemapping
-Repository/R-Forge/Revision: 1084
-Repository/R-Forge/DateTimeStamp: 2015-03-20 20:16:12
-Date/Publication: 2015-03-23 21:14:25
-Packaged: 2015-03-20 20:26:13 UTC; rforge
+Repository/R-Forge/Revision: 1091
+Repository/R-Forge/DateTimeStamp: 2015-03-25 02:31:42
+Date/Publication: 2015-03-25 16:07:43
+Packaged: 2015-03-25 02:51:10 UTC; rforge
 NeedsCompilation: no

@@ -1,4 +1,4 @@
-63d85aef6822952c4ee4bb398dab51f5 *DESCRIPTION
+9913a9b900594ead3e3f3d34a9f2d442 *DESCRIPTION
 73e4b939e79f3eba5d6f5faa963b585e *NAMESPACE
 b3710fdc723c7731cce89fb45cdea6a2 *R/col2html.R
 9259910d8728904df00a783decb1a381 *R/colourScale.R
@@ -10,17 +10,17 @@ ec6094be26cb195791d056d2f12406a9 *R/legendBreaks.R
 dd3906d33bbf89136b1ecc6daeb5bfad *R/map.new.R
 999d7cd0c903444cbd5dd2a6aac7c3a5 *R/omerc.R
 fc0e84dda2f7efc9d132d9fe4ccfd762 *R/openmap.R
-d77a4b86cae66c7d65d6c06b43dcb950 *R/openmapAttribution.R
-b5a938496136efd8b5604b70350d0ee2 *R/scaleBar.R
+d57b2a2236c1a17659eb0cda21801920 *R/openmapAttribution.R
+2877ef59a3db2fcd2bdf45dcee9a9a8b *R/scaleBar.R
 3cb1c1abac2c540f66154c9a5cd115c0 *R/tpeqd.R
 7b4ff6a1adc0632338cd723fc0989edb *R/utils.R
 9db862ace4f6426a56d4e3852ea3532b *build/vignette.rds
 cac9d2ddc601a0b771a8c7c84f1f19ac *data/netherlands.RData
 f71e9d947c9734cab054084d21549043 *inst/doc/mapLayers.R
-62c090fa93e191e28bb97b7d716590e3 *inst/doc/mapLayers.pdf
+feab4e0f661e2718252acabb2128767f *inst/doc/mapLayers.pdf
 f2ef0dfb91fff62a895a14feeed13b0b *inst/doc/mapLayers.rnw
 c8213833953c2e7b0c740f12bdfa8526 *inst/doc/mapmisc.R
-1bccf1b96f86a7fb9b60b08e6c20cd77 *inst/doc/mapmisc.pdf
+687ae28b846d1477a5b0bbe1afe75890 *inst/doc/mapmisc.pdf
 2c80bdbec5236bd0760e066be7809469 *inst/doc/mapmisc.rnw
 e6e19c733f1f5979ee1d159ac52d2fcf *inst/extdata/tiles.RData
 1f8136d23e19d3f6aed44145cad9beb2 *man/col2html.Rd
@@ -29,7 +29,7 @@ e6e19c733f1f5979ee1d159ac52d2fcf *inst/extdata/tiles.RData
 189655104653f23eaf6880835f6a1f78 *man/legendBreaks.Rd
 dafcfbcf861d18c6543215aaf5c0fd8f *man/legendTable.Rd
 dc947824221d9e50fc9f63804d322103 *man/netherlands.Rd
-73fd9ecae315ae0cc56bab48b36a7644 *man/omerc.Rd
+4f820ae2f35ca156a15474f4430ae175 *man/omerc.Rd
 b4b4dd4ce227b157944149bc54665a11 *man/openmap.Rd
 74041eaaa131323901c08d770f04b86f *man/scaleBar.Rd
 277e169d3564dc8d9700665976f8316c *man/tpeqd.Rd
