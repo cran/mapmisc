@@ -5,6 +5,8 @@ col="#FF000090", borderSmall=NA, borderBig=NULL,
 		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
 		outer=TRUE) {
 
+  
+  
 fromEdge = matrix(par("plt"), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
 extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
@@ -13,8 +15,12 @@ fracUsr = abs(apply(fromEdge, 2, diff))
 dimFull = dimUsr/fracUsr
 
 extentFull = extentUsr
-extentFull[1,] = extentFull[1,] - dimFull*fromEdge[1,]
-extentFull[2,] = extentFull[2,] + dimFull*(1-fromEdge[2,])
+extentFull['max',] = extentFull['max',] +
+    apply(extentUsr,2,diff)* (1-fromEdge['max',])
+extentFull['min',] = extentFull['min',]+
+    apply(extentUsr,2,diff)*  fromEdge['min',]
+
+
 
 
 
@@ -32,6 +38,13 @@ if(is.character(crs))
 if(class(crs) != "CRS")
 	crs = CRS(proj4string(crs))
 
+# if cropInset is numeric
+  # use it to extend the extent of the plot region
+  # and crop the inset map
+if(is.numeric(cropInset)) {
+  cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
+  cropInset = projectExtent(cropInset, crsLL)
+}
 
 bboxSmall = t(bbox(extentSmall))
 
@@ -49,6 +62,7 @@ polySmall = cbind(
 
 xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
+
 crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
 if(class(crsCrop)=="try-error")
 	crsCrop = crsLL
@@ -57,7 +71,7 @@ tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
 
 if(is.character(map)) {
-  map = openmap(xsp, path=map, zoom=zoom,crs=crsLL)
+  map = openmap(xsp, path=map, zoom=zoom,crs=NA)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {
@@ -69,26 +83,32 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 	map = crop(map, extent(tocrop))
 }
 
-oldinsetbox = t(bbox(map))
-oldrange = apply(oldinsetbox, 2, diff)
+
+oldrange = apply(extentFull, 2, diff)
 oldYoverX = oldrange[2]/oldrange[1]
 
-newxrange = diff(par("usr")[1:2])*width
+newxrange = diff(extentFull[,'x'])*width
+plotFracYcoords = oldrange['y']/oldrange['x']
+plotFracYinches= par('pin')[2]/par('pin')[1]
+    
+#plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
 
-plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
+#plotFracYinches= exp(diff(log(par('pin'))))
 
-plotFracYinches= exp(diff(log(par('pin'))))
-
-if(length(grep("longlat", projection(map)))) {
-	cellRatio = res(area(map))
-	cellRatio = cellRatio[1]/cellRatio[2]
-} else {
+#if(length(grep("longlat", projection(map)))) {
+#	cellRatio = res(area(map))
+#	cellRatio = cellRatio[1]/cellRatio[2]
+#} else {
 	cellRatio = 1
-}
-newyrange = newxrange * cellRatio* oldYoverX * plotFracYcoords / plotFracYinches 
+#}
+
+insetMapRatio = abs(apply(bbox(map),1,diff))
+insetMapRatio = insetMapRatio[2]/insetMapRatio[1]
+  
+newyrange = newxrange * cellRatio* insetMapRatio# * plotFracYcoords / plotFracYinches 
 
 
-	if(is.character(pos)) {
+if(is.character(pos)) {
 		xpoints = t(bbox(extentBig))
 
 x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)

@@ -1,4 +1,5 @@
-GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
+GNcities = function(north, east, south, west, lang = "en", 
+    maxRows = 10, buffer=0) {
 	
 	fourCoords=FALSE
 	if(is.numeric(north))
@@ -7,7 +8,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 
 	theproj = projection(north)
 	if(!fourCoords) {
-		extLL = .extentLL(north)
+		extLL = .getExtent(north, extend=buffer, crs=crsLL)
 		
 		east = xmax(extLL)
 		west = xmin(extLL)
@@ -39,11 +40,28 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	result
 }
 
-GNsearch = function(...) {
+GNsearch = function(..., crs=crsLL) {
 	
 	
-	if(requireNamespace("geonames", quietly = TRUE)) { 
-	result=geonames::GNsearch(...)
+	if(requireNamespace("geonames", quietly = TRUE)) {
+
+  theDots = list(...)
+  isVector = unlist(lapply(theDots, length))
+  isVector = isVector[isVector > 1]
+  
+  
+  
+  if(length(isVector)) {
+    result = mapply(
+        geonames::GNsearch,
+        ...,
+        SIMPLIFY=FALSE
+        )
+    result = do.call(rbind, result)    
+    result = as.data.frame(result)
+  } else {
+    result=geonames::GNsearch(...)
+  }
 	
 	if(all(c("lat","lng") %in% names(result))){
 		coords = as.matrix(result[,c("lng","lat"),drop=FALSE])
@@ -55,7 +73,10 @@ GNsearch = function(...) {
 				coords,
 				 data=result, 
 				proj4string=crsLL)
-	}
+    if(requireNamespace('rgdal', quietly=TRUE ))
+      result = spTransform(result, CRSobj=crs(crs))
+  }
+
 } else {
 	warning("install the geonames package to use GNsearch")
 	result = NULL

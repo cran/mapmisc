@@ -25,7 +25,7 @@ plot(myrasterUTM)
 points(myPointsUTM)
 
 myPointsMercator = spTransform(myPoints, 
-		CRS("+init=epsg:3857"))
+		crsMerc)
 
 
 myplot = function(first,second=first) {
@@ -44,9 +44,6 @@ thezoom=6
 
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
-if(exists("nsl", where="package:utils")) {
-	if(length(utils::nsl("www.OpenStreetMap.org"))) {
-
 
 		# raster, result will be in project of the raster (long-lat)
 		mytiles = openmap(x=extend(myraster,1),zoom=thezoom, 
@@ -107,7 +104,17 @@ if(exists("nsl", where="package:utils")) {
 	# one point only
 	mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
 	myplot(myPoints)
-	
-	}
-}		
-}
+
+  # ams city hall
+  cityHall = SpatialPoints(cbind( 4.891111, 52.373056), proj4string=crsLL)
+#  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
+  cityHall = spTransform(cityHall,CRS("+init=epsg:32631"))
+  mytiles = openmap(cityHall, buffer=50, verbose=TRUE)
+  if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
+  plot(mytiles)
+  points(cityHall, pch=3, col='blue',cex=4)
+  scaleBar(mytiles, 'topleft')
+  if(!interactive()) dev.off()
+
+  
+  } # end have rgdal
