@@ -68,7 +68,7 @@ openmap = function(x, zoom,
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
 	crs=projection(x),
-  buffer=0,
+  buffer=0, fact=1,
 	verbose=FALSE) {
 
 
@@ -87,7 +87,18 @@ openmap = function(x, zoom,
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(pathOrig) = path
 
-	extMerc = .getExtent(x,crs, buffer, crsMercSphere)
+	crsOut=crs
+	crsIn = crs(x)
+	if(all(is.na(crsIn))) {
+		if(is.vector(x)){
+			crsIn=crsLL
+		} else{
+			crsIn = crs	
+		}
+	}
+	
+	
+	extMerc = .getExtent(x,crsIn, buffer, crsMercSphere)
   extMerc = cropExtent(extMerc, openmapExtentMercSphere)
   
 	if(missing(zoom)) {
@@ -100,7 +111,6 @@ openmap = function(x, zoom,
 	if(verbose) cat("zoom is ", zoom, ", ", nTilesMerc(extMerc, zoom), "tiles\n")
 
 	result = NULL
-
   
 	for(Dpath in rev(path)) {
 		thistile = try(
@@ -144,19 +154,33 @@ openmap = function(x, zoom,
         )
 	} 
 
-	crsOut=crs
 	
 	if(!is.na(crsOut)  ){
-    if(verbose) cat("reprojecting ", ncell(result), " cells...")
+		oldColorTable = list()
+		for(D in names(result))
+			oldColorTable[[D]] = result[[D]]@legend@colortable
+		if(fact > 1){
+			if(verbose) cat("disaggregating by ", fact, "...")
+			result = disaggregate(
+						result, fact=fact
+					)
+					
+		}
+		
+		if(verbose) cat("reprojecting ", ncell(result), " cells...")
     
-		resultProj = projectRaster(result, crs=crsOut, method="ngb")
+		resultProj = stack(projectRaster(result, crs=crsOut, method="ngb"))
+
+		for(D in names(resultProj))
+			resultProj[[D]]@legend@colortable = oldColorTable[[D]]
+
+		
     if(verbose) cat("done\n")
     
 	} else {
-		resultProj = result
+		resultProj = stack(result)
 	}
 
-		resultProj = stack(resultProj)
 
 		#	resultProj@legend@colortable = result@legend@colortable
 

@@ -1,10 +1,25 @@
-colourScale = function(x=NULL, breaks=5, 
-style=c("quantile","equal","unique", "fixed"),
-col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-transform=NULL, revCol=FALSE, exclude=NULL, 
-labels=NULL,...) {
+roundForBreaks = function(breaks, dec){
+	if(is.null(dec)) return(breaks)
+dec = 10^dec
+breaks = breaks * dec
+breaks = c(floor(breaks[1]), 
+		round(breaks[seq(2,by=1,len=length(breaks)-2)]),
+		ceiling(breaks[length(breaks)]))
+breaks / dec
+}
 
-UseMethod("colourScale")	
+radarCol <- c("#FFFFFF", "#99CCFF", "#0099FF", "#00FF66", "#00CC00", "#009900", 
+				"#006600", "#FFFF33", "#FFCC00", "#FF9900", "#FF6600", "#FF0000", 
+				"#FF0299", "#9933CC", "#660099")
+
+colourScale = function(x=NULL, breaks=5, 
+	style=c("quantile","equal","unique", "fixed"),
+	col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+	transform=NULL, revCol=FALSE, exclude=NULL, 
+	labels=NULL,...) {
+
+
+	UseMethod("colourScale")	
 
 }
 
@@ -44,17 +59,24 @@ weights=NULL
 
 NforSample = 5e+05
 
+if(is.character(col)){
+if(col[1]=='radar'){
+	col = radarCol
+}
+}
+
+
 	if(style == "equal") {
 		if(length(exclude)) {
 			x = unique(x)
 		} else {
-			x = try(c(minValue(x), maxValue(x)), silent=TRUE)
+			x = try(range(c(minValue(x), maxValue(x))), silent=TRUE)
       if(class(x)=='try-error')
         x = range(quantile(sampleRegular(x, size=NforSample)))
 		}
 	} else if(style=='fixed') {
 		x = NULL
-	} else if(style=='unique') {
+} else if(style=='unique') {
 
     if(is.null(labels)){
       levelsx = levels(x)[[1]]
@@ -81,7 +103,7 @@ NforSample = 5e+05
         }
       } # end different numbers of levels and breaks
       
-  } # labels is not null
+  	} # labels is not null
     
     if(ncell(x)<1e+06) {
       x = freq(x)
@@ -139,7 +161,7 @@ NforSample = 5e+05
   x=levelsx$ID
   labels = levelsx$label
 		
-	} else { # not unique or equal or fixed, take a sample
+} else { # not unique or equal or fixed, take a sample
     Nsample = 20000
     xVec= c()
     Diter = 0
@@ -150,7 +172,8 @@ NforSample = 5e+05
       Diter = Diter + 1
     }
     x = c(xVec, maxValue(x), minValue(x))
-	}
+} # end if style== stuff
+
 	res=colourScale(x, breaks, 
 			style,
 			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
@@ -168,6 +191,13 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		weights=NULL,...) {
 
 	xOrig = x
+
+	if(is.character(col)){
+		if(col[1]=='radar'){
+			col = radarCol
+		}
+	}
+	
 	
 	style = style[1]
 	if(!is.function(col)){		
@@ -268,7 +298,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		names(colVec) =as.character(thetable$ID)
 		breaks = thetable$ID
 		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
-	} else {
+	} else { # not unique breaks
 		if(length(exclude) & length(x)) {
 			toexclude = which(x %in% exclude)
 			x[toexclude]	= NA
@@ -354,12 +384,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		
 		# round
 		if(!is.null(dec)) {
-			dec = 10^dec
-			breaks = breaks * dec
-			breaks = c(floor(breaks[1]), 
-					round(breaks[seq(2,by=1,len=length(breaks)-2)]),
-					ceiling(breaks[length(breaks)]))
-			breaks = breaks / dec
+			breaks = roundForBreaks(breaks, dec)
 		} # end rounding
 		if(!is.null(firstBreak))
 			breaks[1] = firstBreak

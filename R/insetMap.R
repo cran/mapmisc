@@ -20,19 +20,27 @@ extentFull['max',] = extentFull['min',] +
 extentFull['min',] = extentFull['min',] -
     apply(extentUsr,2,diff) *(  fromEdge['min',])/ (1 -  fromEdge['min',])
 
+extentFull = extent(
+		extentFull[1,1],
+		extentFull[2,1],
+		extentFull[1,2],
+		extentFull[2,2]
+		)
 
-
-
+extentUsr = extent(
+		extentUsr[1,1],
+		extentUsr[2,1],
+		extentUsr[1,2],
+		extentUsr[2,2]
+)
+		
 
 if(outer) {
 	extentBig = extentFull
 }
 
-extentSmall = try(extent(crs), silent=TRUE)
-
-if(class(extentSmall)=="try-error")
-	extentSmall = extentBig
-	
+extentSmall = extentUsr
+		
 if(is.character(crs))
 			crs = CRS(crs)
 if(class(crs) != "CRS")
@@ -84,10 +92,10 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 }
 
 
-oldrange = apply(extentFull, 2, diff)
+oldrange = apply(bbox(extentFull), 2, diff)
 oldYoverX = oldrange[2]/oldrange[1]
 
-newxrange = diff(extentFull[,'x'])*width
+newxrange = (xmax(extentFull)-xmin(extentFull))*width
 plotFracYcoords = oldrange['y']/oldrange['x']
 plotFracYinches= par('pin')[2]/par('pin')[1]
     
