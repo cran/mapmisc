@@ -84,3 +84,29 @@ GNsearch = function(..., crs=crsLL) {
 }
 	result
 }
+
+
+geocode = function(...) {
+	if(requireNamespace("dismo", quietly = TRUE)) {
+		
+		result = dismo::geocode(...)		
+		
+		if(is.data.frame(result)) {
+		result$name = gsub(", [[:print:]]+$", "", 
+				as.character(result$interpretedPlace))
+		resultCoords = as.matrix(result[,c('longitude','latitude')])
+		result = SpatialPointsDataFrame(
+				resultCoords,
+				data = result,
+				proj4string = mapmisc::crsLL
+				)
+			}
+		
+	} else {
+		warning("install the dismo package to use geocode")
+		result = NULL
+		
+	}
+	result
+	
+}

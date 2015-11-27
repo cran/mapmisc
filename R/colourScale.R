@@ -23,6 +23,10 @@ colourScale = function(x=NULL, breaks=5,
 
 }
 
+colorScale = function(...) {
+	colourScale(...)
+}
+
 colourScale.character =   function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
@@ -426,7 +430,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		thetable$colOpacity = colForPlot
 		
 		result$colourtable = rep(NA, max(thetable$ID)+1)
-		result$colourtable[1+thetable$ID] = thetable$col
+		result$colourtable[1+thetable$ID] = thetable$colOpacity
 		result$colortable = result$colourtable
 
 		if(length(xOrig))

@@ -8,7 +8,6 @@ x=nldCities
 xbox = as(extent(nldCities), 'SpatialPolygons')
 crs(xbox) = crs(nldCities)
 
- 
 
 bob=function(angle, ...){
   y = spTransform(x, omerc(x, angle, ...))
