@@ -1,35 +1,45 @@
-# crsLL = CRS("+epsg:4326")
+# crsLL = CRS("+init=epsg:4326")
 crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
 
-#  crsMerc =CRS("+init=epsg:3857") # mercator projection
-crsMercLL = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +ellps=WGS84 +units=m +nadgrids=@null +no_defs")
+# CRS("+init=epsg:3857") without the nagrids stuff
+crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs")
 
-crsMercSphere = crsMerc = CRS("+proj=merc +ellps=sphere +units=m")
+#crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")
+#crsLlSphere = CRS("+proj=longlat +ellps=sphere")
 
-crsSphere = CRS("+proj=longlat +ellps=sphere")
-
-llLim = atan(sinh(pi))*360/(2*pi)
-openmapExtentLL = extent(-180, 180,-llLim,llLim)
-
+# extent of the Earth in the spherical mercator projection
 if(FALSE) {
-openmapExtentMercSphere = extent(projectExtent(raster(openmapExtentLL, crs=crsSphere), crsMercSphere))
-openmapExtentMercSphere = extent(round(as.vector(openmapExtentMercSphere)))
-openmapExtentMercSphere = as.vector(openmapExtentMercSphere)
-dump('openmapExtentMercSphere', file='')
+# need rgdal for this	
+createExtentMerc  = function(){
 
-openmapExtentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsSphere), crsMerc))
-openmapExtentMerc = extent(round(as.vector(openmapExtentMerc)))
-openmapExtentMerc = as.vector(openmapExtentMerc)
-dump('openmapExtentMerc', file='')
+	latlim = atan(sinh(pi))*360/(2*pi)
+	lonlim = 180
 
+	openmapExtentLL = extent(-lonlim, lonlim,-latlim,latlim)
+
+	extentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsLL), crs=crsMerc))
+
+	extentMerc
 }
-openmapExtentMercSphere <-
-    extent(c(-20015077, 20015077, -20015077, 20015077))
 
-openmapExtentMerc <-
-   extent( c(-20037508, 20037508, -19994875, 19994875))
+extentMerc = createExtentMerc()
+dput(extentMerc, file='')
+}
 
-.getExtent = function(x, crs=NA, extend=0, crsOut = crsMercSphere) {
+extentMerc = new("Extent"
+    , xmin = -20037508.3427892
+    , xmax = 20037508.3427892
+    , ymin = -20037508.3427893
+    , ymax = 20037508.3427892
+)
+
+.getRasterMerc = function(zoom) {
+  N = 2^zoom 
+  raster(extentMerc, nrows = N, ncols=N, crs=crsMerc)
+}
+
+
+.getExtent = function(x, crs=NA, extend=0, crsOut = crsMerc) {
   
   # find the CRS's
   crsUse = projection(x)
@@ -55,7 +65,7 @@ openmapExtentMerc <-
 	}
   if(requireNamespace('rgdal', quietly=TRUE)) {
 		# if long-lat coordinates and buffer is large, assume buffer is metres 
-		if(raster::isLonLat(crs) & extend > 80) {
+		if(raster::isLonLat(crs) & any(extend > 80)) {
     	x = as(
         	extent(x), 
         	'SpatialPoints'
@@ -85,7 +95,8 @@ openmapExtentMerc <-
   result
 }
 
-cropExtent = function(x,y){
+
+.cropExtent = function(x,y){
   xmin(x) = pmax(xmin(x), xmin(y))
   xmax(x) = pmin(xmax(x), xmax(y))
   ymin(x) = pmax(ymin(x), ymin(y))

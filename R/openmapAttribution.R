@@ -47,6 +47,55 @@ osm = list(long=list(
 )
 
 
+# open govt licence canada
+nrcan = list(long=list(
+      	latex=paste(
+          	'Cartography by \\href{http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216}',
+						'{The Canada Base Map --- Transportation (CBMT) web mapping services',
+						' of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)}',
+          	' licensed as the ',
+						'\\href{http://open.canada.ca/en/open-government-licence-canada}',
+						'{Open Government Licence --- Canada}.',
+          	sep=''
+      	),
+      	markdown=
+						paste(
+          			'Cartography by ',
+								'[The Canada Base Map - Transportation (CBMT) web mapping services',
+								' of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)]',
+								'(http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216)',
+          			' licensed as the ',
+								'[Open Government Licence - Canada]',
+								'(http://open.canada.ca/en/open-government-licence-canada).',
+          			sep=''
+      	),
+      	html=paste(
+          	'Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">',
+						'The Canada Base Map - Transportation (CBMT) web mapping services',
+						' of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a>',
+          	' licensed as the ',
+						'<a href="http://open.canada.ca/en/open-government-licence-canada">',
+						'Open Government Licence - Canada</a>.',
+          	sep=''
+      	),
+      	text =paste(
+          	'Cartography by ',
+						'The Canada Base Map - Transportation (CBMT) web mapping services',
+						' of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan) ',
+						'(www.nrcan.gc.ca/earth-sciences/geography/topographic-information)',
+          	' licensed as the ',
+						'Open Government Licence - Canada',
+						' (open.canada.ca/en/open-government-licence-canada).',
+          	sep=''
+  	)
+),
+  	short=list(
+      	latex='\\href{http://www.nrcan.gc.ca}{Natural Resources Canada}',
+      	markdown='[Natural Resources Canada](http://www.nrcan.gc.ca)',
+      	html= '&copy; <a href="http://www.nrcan.gc.ca">Natural Resources Canada"</a>',
+      	text='Natural Resources Canada'
+    )
+)
 
 for(D in names(osm$long)){
   osm$long[[D]] = paste(
@@ -109,7 +158,7 @@ mapquest = mapquestSat = list(
   stamen = stamenToner = list(
       short=list(
           latex='\\copyright \\href{http://stamen.com}{Stamen Design}',
-          markdown='&copy; [OpenStreetMap](http://stamen.com)',
+          markdown='&copy; [Stamen Design](http://stamen.com)',
           html= '&copy; <a href="http://stamen.com">Stamen Design</a>',
           text='copyright Stamen Design'
   ),
@@ -277,14 +326,18 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
   name = unique(gsub("Red$|Green$|Blue$|Trans$", "", name))
   result = c()
   for(D in name){
-        if(length(grep(
+		
+		if(length(grep('^nrcan$', D))) {
+			result[D] = nrcan[[shortlong]][[type]]
+			
+		} else if(length(grep(
                 "^osm|opentopomap|openstreetmap|historical|bw.mapnik", 
                 D))){        # openstreetmap
           result[D] = osm[[shortlong]][[type]]
-        } else if(length(grep("humanitarian",D))){
+    } else if(length(grep("humanitarian",D))){
           result[D] = osmHumanitarian[[shortlong]][[type]]
           
-     } else if(length(grep("landscape",D))){
+    } else if(length(grep("landscape",D))){
       result[D] = osmLandscape[[shortlong]][[type]]
       
     } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
@@ -297,7 +350,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
         result[D] = waze[[shortlong]][[type]]
       } else if(length(grep("maptoolkit",D))){ 
         result[D] = maptoolkit[[shortlong]][[type]]
-      } else if(length(grep("stamen",D))){ # mapquest
+      } else if(length(grep("stamen",D))){ # stamen
         if(length(grep("stamen-toner",D))){
           result[D] = stamenToner[[shortlong]][[type]]
         } else {

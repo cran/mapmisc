@@ -1,0 +1,214 @@
+## ----setup---------------------------------------------------------------
+
+library('mapmisc')
+library('knitr')
+haveRgdal = require('rgdal', quietly=TRUE)
+opts_chunk$set(dpi=40,dev.args=list(bg='white'), out.width='400')	
+
+# higher resolution images
+# opts_chunk$set(dpi=72) 
+
+## ----data----------------------------------------------------------------
+
+coords = rbind(Alert = c(-62.338889, 82.501389),
+    Qaanaaq = c(-69.238685,77.466335), 	
+    'Alex Fjord' = c(-75.999722, 78.9),
+    'Hans island' = c(-66.459722, 80.828056)
+)
+
+x = SpatialPointsDataFrame(
+    coords, 
+    data=data.frame(name=rownames(coords)),
+    proj4string=crsLL
+    )
+
+## ----osm-----------------------------------------------------------------
+if(haveRgdal){
+map = openmap(x, path='osm', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
+
+map.new(map)
+plot(map,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
+}
+
+## ----mapquest------------------------------------------------------------
+if(haveRgdal){
+mapSat = openmap(x, path='mapquest', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
+
+map.new(mapSat)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
+}
+
+## ----mapquestDetail------------------------------------------------------
+if(haveRgdal){
+mapSat = openmap(x=x[x$name=='Hans island',], path='mapquest', 
+    verbose=TRUE, buffer=c(4,1), zoom=6)    
+
+map.new(x[x$name=='Hans island',], buffer=0.3)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
+points(x, pch=4, col='#FF000040', cex=5)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottomright')
+}
+
+## ----mapquestQaanaaq-----------------------------------------------------
+if(haveRgdal){
+mapSat = openmap(x[x$name=='Qaanaaq',], path='mapquest', 
+    verbose=TRUE, buffer=c(2,1), zoom=5)
+
+map.new(x[x$name=='Qaanaaq',], buffer=0.5)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
+points(x, pch=4, col='red', cex=5)
+text(x, label=x$name, pos=4, col='red')
+scaleBar(x, 'bottomleft')
+}
+
+## ----omerc---------------------------------------------------------------
+if(haveRgdal){
+xMerc = spTransform(x, omerc(x))
+mapMerc = openmap(xMerc, path='osm', verbose=TRUE, 
+    maxTiles=20, buffer=c(50,200)*1000)    
+
+map.new(xMerc, buffer=50000)
+plot(mapMerc,add=TRUE)
+points(xMerc)
+text(xMerc, label=xMerc$name, pos=4)
+scaleBar(xMerc, 'bottomleft')
+scaleBar(xMerc, 'left', seg.len=0, bty='n')
+}
+
+## ----nrcan---------------------------------------------------------------
+if(haveRgdal){
+xOmerc = spTransform(
+		x,
+		omerc(x,angle=5)
+		)
+
+map = openmap(xOmerc, 
+		path=c('nrcan', 'nrcan-text'), 
+		verbose=TRUE, fact=3,
+		maxTiles=10, buffer=c(20,100,100,0)*10*1000)    
+
+
+mapText = rgbtToIndex(map, pattern='nrcan.text')
+
+map.new(map)
+plotRGB(map[[grep("text", names(map), invert=TRUE)]],
+		add=TRUE)
+gridlinesWrap(map, easts=seq(-180,0,by=2), col='red')
+plot(mapText,add=TRUE)
+points(xOmerc)
+text(xOmerc, label=xOmerc$name, pos=4)
+scaleBar(xOmerc, 'bottom', bg='white')
+scaleBar(xOmerc, 'left', seg.len=0, bty='n')
+}
+
+
+## ----nrcanAlex-----------------------------------------------------------
+if(haveRgdal){
+map = openmap(x[x$name=='Alex Fjord',], 		
+	path='nrcan', 
+    verbose=TRUE, buffer=c(5,5,2,1))    
+map.new(map)
+plotRGB(map, add=TRUE)
+points(x, pch=4, col='red', cex=5)
+text(x, label=x$name, pos=1, col='red')
+scaleBar(x, 'bottomleft')
+}
+
+## ----southData-----------------------------------------------------------
+
+waterhouseLL = SpatialPoints(
+		cbind(x=178.7729285, y=-49.6941201), 
+		proj4string=crsLL
+)
+
+rockLL = SpatialPoints(
+		cbind(x=178.80112, y=-49.69171), 
+		proj4string=crsLL
+)
+
+
+if(haveRgdal) {
+	waterhouseMerc <- spTransform(waterhouseLL, crsMerc)
+
+
+	rockMerc = spTransform(rockLL, crsMerc)
+
+#dput(rockMerc, file='')
+#dput(waterhouseMerc, file='')
+
+} else {
+	
+	waterhouseMerc = new("SpatialPoints"
+    	, coords = structure(c(19900911.3682423, -6393470.38497316), .Dim = 1:2, .Dimnames = list(
+    					NULL, c("x", "y")))
+    	, bbox = structure(c(19900911.3682423, -6393470.38497316, 19900911.3682423, 
+							-6393470.38497316), .Dim = c(2L, 2L), .Dimnames = list(c("x", 
+									"y"), c("min", "max")))
+    	, proj4string = new("CRS"
+    			, projargs = "+proj=merc +ellps=sphere +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
+			)
+	)
+
+	rockMerc = new("SpatialPoints"
+    	, coords = structure(c(19904049.631667, -6393055.64126258), .Dim = 1:2, .Dimnames = list(
+    					NULL, c("x", "y")))
+    	, bbox = structure(c(19904049.631667, -6393055.64126258, 19904049.631667, 
+							-6393055.64126258), .Dim = c(2L, 2L), .Dimnames = list(c("x", 
+									"y"), c("min", "max")))
+    	, proj4string = new("CRS"
+    			, projargs = "+proj=merc +ellps=sphere +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
+			)
+	)
+}
+
+## ----waterhouseMerc------------------------------------------------------
+mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA, verbose=TRUE)
+
+map.new(mapMerc)
+plot(mapMerc, add=TRUE)
+points(waterhouseMerc, col='blue', cex=5)
+scaleBar(mapMerc, 'bottomleft')
+
+## ----rockMerc------------------------------------------------------------
+
+mapMercFine = openmap(rockMerc, buffer=100, crs=NA, verbose=TRUE)
+
+
+map.new(mapMercFine)
+plot(mapMercFine, add=TRUE)
+points(rockMerc, col='blue',cex=5)
+scaleBar(mapMercFine, 'bottomleft')
+
+## ----waterhouseLL--------------------------------------------------------
+if(haveRgdal) {
+
+	mapLL = openmap(waterhouseLL, buffer=0.02, verbose=TRUE)
+	
+	map.new(mapLL)
+	plot(mapLL, add=TRUE)
+	points(waterhouseLL, pch=3, cex=5)
+	scaleBar(mapLL, 'bottomleft')
+}
+
+## ----rockLL--------------------------------------------------------------
+if(haveRgdal) {
+	mapLLfine = openmap(rockLL, zoom=19, verbose=TRUE, buffer=0.0002)
+	
+	map.new(mapLLfine)
+	plot(mapLLfine, add=TRUE)	
+	points(rockLL, col='blue', pch=3, cex=5)
+	scaleBar(mapLL, 'bottomleft')
+	
+}
+
+ 
+

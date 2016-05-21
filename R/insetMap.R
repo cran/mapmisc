@@ -1,9 +1,9 @@
 insetMap = function(crs, 
     pos="bottomright",map="osm",zoom=0, 
     width=max(c(0.2, 1-par('plt')[2])), 
-col="#FF000090", borderSmall=NA, borderBig=NULL,
+col="#FF000090", borderMap=NULL, 
 		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
-		outer=TRUE) {
+		outer=TRUE, ...) {
 
   
   
@@ -46,14 +46,6 @@ if(is.character(crs))
 if(class(crs) != "CRS")
 	crs = CRS(proj4string(crs))
 
-# if cropInset is numeric
-  # use it to extend the extent of the plot region
-  # and crop the inset map
-if(is.numeric(cropInset)) {
-  cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
-  cropInset = projectExtent(cropInset, crsLL)
-}
-
 bboxSmall = t(bbox(extentSmall))
 
 xseq = seq(bboxSmall[1,1], bboxSmall[2,1],len=20)
@@ -61,35 +53,44 @@ yseq = seq(bboxSmall[1,2], bboxSmall[2,2],len=20)
 
 polySmall = cbind( 
 		c(xseq, rep(bboxSmall[2,1], length(yseq)), 
-			rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
+				rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
 		c(rep(bboxSmall[1,2], length(xseq)), yseq,
 				rep(bboxSmall[2,2], length(xseq)), rev(yseq)
-				)
+		)
 )
 
 
 xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
 
-crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
-if(class(crsCrop)=="try-error")
-	crsCrop = crsLL
-tocrop = t(bbox(extent(cropInset)))
-tocrop = SpatialPoints(tocrop,
-		proj4string=crsCrop)
+# if cropInset is numeric
+  # use it to extend the extent of the plot region
+  # and crop the inset map
+if(is.numeric(cropInset)) {
+  cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
+}
+
+if(all(class(cropInset)=='Extent')){
+	cropInset = raster(cropInset, crs=crsLL)
+	mapExtent = xsp
+} else {
+	mapExtent = cropInset
+}
 
 if(is.character(map)) {
-  map = openmap(xsp, path=map, zoom=zoom,crs=NA)
+  map = openmap(mapExtent, path=map, zoom=zoom,crs=NA)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {
   warning('map is not a Raster')
 }
 
-if(requireNamespace('rgdal', quietly=TRUE)) {
-	tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
-	map = crop(map, extent(tocrop))
-}
+tocrop = projectExtent(cropInset, CRS(proj4string(map)))
+map = crop(map, extent(tocrop))
+
+
+
+
 
 
 oldrange = apply(bbox(extentFull), 2, diff)
@@ -147,10 +148,12 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 
 N = length(xsp)
-xsp = coordinates(xsp)
 
-xsp = (xsp - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
+xsp@coords = (xsp@coords - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
 		bbSmall[rep(1,N),]
+
+xsp = raster::crop(xsp, map)
+xsp = coordinates(xsp)
 
 if(outer) {
 	oldxpd = par("xpd")
@@ -161,9 +164,11 @@ if(nlayers(map)>=3) {
 } else {
 	plot(map, add=TRUE)
 }
+
+# border around the map
 bigpoly = t(bbox(map))
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
-polygon(bigpoly,border=borderBig)
+polygon(bigpoly,border=borderMap)
  
 delta=0.3
 theX = anX = c(-delta + delta*1i, -delta + 1i, delta+1i, delta + delta*1i)
@@ -172,16 +177,15 @@ for(D in 1:3)
 theX = theX*exp(-2*pi*1i/8)
 
 if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
-	
 	polygon((1.5*width*dimFull[1]/20) * theX +
-					mean(xsp[,1])+1i*mean(xsp[,2]), col=col,border=NA)
+					mean(xsp[,1])+1i*mean(xsp[,2]), col=col, ...)
 } else {
-	polygon(xsp, col=col,border=borderSmall)
+	polygon(xsp, col=col, border=NA, ...)
 }
 
 if(outer) {
 	par(xpd=oldxpd)
 }	
 
-return(invisible(mapOrig))
+return(invisible(xsp))
 }

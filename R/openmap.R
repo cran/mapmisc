@@ -1,40 +1,53 @@
 osmTiles = function(name) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
-			"osm-no-labels"="http://a.tiles.wmflabs.org/osm-no-labels/",
+			'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
+			'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg',
+			'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
+			'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid',
+			"osm-no-labels"="http://tiles.wmflabs.org/osm-no-labels/",
       "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
-			"bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik",
+			"bw-mapnik"="http://tiles.wmflabs.org/bw-mapnik",
 			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
 			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
       "mapquest-labels"='http://otile3.mqcdn.com/tiles/1.0.0/hyb/',
       'osm-cyclemap' = 'http://a.tile.opencyclemap.org/cycle/',
       'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
       'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
-#      'osm-rail' = 'http://a.tiles.openrailwaymap.org/standard/',
-# rail is 512 insstead of 256 tiles
-      #			hill="http://www.toolserver.org/~cmarqu/hill/",
 			'landscape'="http://tile.opencyclemap.org/landscape/",
-#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
-		"opentopomap" = "http://opentopomap.org/tiles/",
+			'hyda' = 'http://c.tile.openstreetmap.se/hydda/full/',
+			'hyda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
+			'hyda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
+  		"opentopomap" = "http://a.tile.opentopomap.org/tiles/",
+ "maptoolkit"="http://tile2.maptoolkit.net/terrain/",
+	waze="http://worldtiles3.waze.com/tiles/",
+# 'waze-us'='https://livemap-tiles2.waze.com/tiles/',
+	humanitarian="http://a.tile.openstreetmap.fr/hot/",
+  cartodb='http://c.basemaps.cartocdn.com/light_all/',
+ 'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
+  historical='http://www.openhistoricalmap.org/ohm_tiles/',
+  nrcan = 
+		'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+ 'nrcan-text' = 
+		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
+ 'nrcan-text-fr' = 
+		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/'
+)
+#	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
+#  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
 #		"osm2world"="http://tiles.osm2world.org/osm/pngtiles/n/",
 #		bvg="http://mobil.bvg.de/tiles/",
 #	landshaded="http://tiles.openpistemap.org/landshaded/",
-	"maptoolkit"="http://tile2.maptoolkit.net/terrain/",
-#	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
-#  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
-	waze="http://tilesworld.waze.com/tiles/",
-  'waze-us'='http://livemap-tiles1.waze.com/tiles/',
-#	eu="http://alpha.map1.eu/tiles/"#,
-	humanitarian="http://a.tile.openstreetmap.fr/hot/",
- cartodb='http://c.basemaps.cartocdn.com/light_all/',
-'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
-historical='http://www.openhistoricalmap.org/ohm_tiles/'#,
-#'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
-#' 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
-#' 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
-#' 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
-	)
+#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
+#      'osm-rail' = 'http://a.tiles.openrailwaymap.org/standard/',
+# rail is 512 insstead of 256 tiles
+#			hill="http://www.toolserver.org/~cmarqu/hill/",
+#	eu="http://alpha.map1.eu/tiles/",
+# 'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
+# 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
+# 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
+# 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
 	
 	
   
@@ -74,7 +87,8 @@ openmap = function(x, zoom,
 
 	alltiles = osmTiles()
 	pathOrig = path
-	pathisname = path %in% names(alltiles)
+	pathisname = gsub("-", ".", pathOrig) %in% 
+			gsub("-", ".", names(alltiles))
 	path[pathisname] = alltiles[path[pathisname]]
 	
 	if(length(grep("/$", path, invert=TRUE)))
@@ -85,7 +99,7 @@ openmap = function(x, zoom,
 		path[ grep("^http[s]*://", path, invert=TRUE)] = 
 				paste("http://", 
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
-	names(pathOrig) = path
+	names(path) = pathOrig
 
 	crsOut=crs
 	crsIn = crs(x)
@@ -98,8 +112,8 @@ openmap = function(x, zoom,
 	}
 	
 	
-	extMerc = .getExtent(x,crsIn, buffer, crsMercSphere)
-  extMerc = cropExtent(extMerc, openmapExtentMercSphere)
+	extMerc = .getExtent(x,crsIn, buffer, crsMerc)
+  extMerc = .cropExtent(extMerc, extentMerc)
   
 	if(missing(zoom)) {
 	zoom = 1
@@ -112,39 +126,66 @@ openmap = function(x, zoom,
 
 	result = NULL
   
-	for(Dpath in rev(path)) {
+	for(Dpath in rev(names(path))) {
+		Durl = path[Dpath]
+		if(verbose){
+			cat(Dpath, '\n')
+			cat(Durl, '\n')
+		}
+		
+		if(length(grep(
+						'nrcan\\.gc\\.ca', Durl))){
+			suffix = ''
+			tileNames = 'zyx'
+		} else if(length(grep('heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', Durl))){
+			tileNames = 'xyz='
+			suffix = ''
+		} else {
+			suffix = '.png'
+			tileNames = 'zxy'
+		}
+		
 		thistile = try(
 				getTilesMerc(extMerc, zoom=zoom,
-				path=Dpath,
-				verbose=verbose),
-		silent=TRUE	)
+				path=Durl,
+				verbose=verbose,
+				suffix=suffix,
+				tileNames = tileNames),
+		silent=!verbose)
 
 		if(class(thistile)=="try-error"){
-			message(paste(Dpath, "not accessible"))
+			message(paste(Durl, "not accessible"))
       thistile=NULL
 		}	else {
 			if(length(names(thistile))) {
-				theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
-				names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
-					names(thistile),fixed=TRUE)		
+				theprefix=strsplit(
+						names(thistile), 
+						"([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE
+				)[[1]]
+				names(thistile) = gsub(
+						theprefix, paste(Dpath, "",sep=""), 
+						names(thistile),fixed=TRUE)		
 			}
 
 		ctable = NULL
 		if(!is.null(thistile)) {
 			if(nlayers(thistile)==1)
 				ctable = thistile@legend@colortable
-      result =  stack(thistile, result)	
+			if(is.null(result)) {
+				result = stack(thistile)
+			} else {
+	      result =  stack(result, thistile)	
+			}
 		}
 		
-		if(length(ctable))
-				result[[1]]@legend@colortable = ctable
-		
+	
 		} # end not try-error
 	} # end loop through path	
 
 	
 	if(is.null(result)) {
-		result = raster(openmapExtentMercSphere,1,1,crs=crsMercSphere)
+		# create an empty raster
+		result = raster(extMerc,1,1,crs=crsMerc)
 		values(result) = NA
     attributes(result)$openmap = list(
         tiles=NA,
@@ -152,7 +193,7 @@ openmap = function(x, zoom,
         path=path,
         zoom=zoom
         )
-	} 
+	}
 
 	
 	if(!is.na(crsOut)  ){
@@ -160,15 +201,33 @@ openmap = function(x, zoom,
 		for(D in names(result))
 			oldColorTable[[D]] = result[[D]]@legend@colortable
 		
-		if(verbose) cat("reprojecting ", ncell(result), " cells...")
+	if(verbose) cat("reprojecting ", ncell(result), " cells...")
+		
+	# if tiles need projecting
+	if(!compareCRS(projection(result), crsOut)) {
 
     toRaster = projectExtent(result, crsOut)
 		
+		# see if this raster has an unnecessarily large extent
+		bboxx = try(bbox(extend(extent(x), buffer)), silent=TRUE)
 		
+		# check for bboxx a single point
+		if(any(apply(bboxx,1,diff)<.Machine$double.eps)) {
+			class(bboxx) = 'try-error'
+		}
+		
+		projx = try(proj4string(x), silent=TRUE)
+		if(class(bboxx)!="try-error" &  class(projx) != 'try-error'){
+		  if(identical(projx, crsOut)) {
+			  bigExtent =  extend(
+						extent(x), buffer + abs(as.numeric(apply(bboxx, 1, diff))/2))
+			  toRaster = raster::crop(toRaster, bigExtent)
+		  }
+		}
 		if(any(fact > 1)){
 			res(toRaster) = res(toRaster) / rep_len(fact,2)
 		}
-		
+
 		resultProj = stack(projectRaster(result, toRaster, method="ngb"))
 
 		for(D in names(resultProj))
@@ -176,29 +235,41 @@ openmap = function(x, zoom,
 
 		
     if(verbose) cat("done\n")
+	} else { # crsOut and projection(result) are the same
+		if(any(fact < 1)) {
+			# aggregate the raster
+			fact = pmax(1,round(1/fact))
+			if(any(fact > 1)) {
+				if(verbose) cat("aggregating tiles by ", fact,  "\n")
+				resultProj = stack(aggregate(result, fact=fact, fun=min))
+				for(D in names(resultProj)) resultProj[[D]]@legend = result[[D]]@legend
+			}
+		} else {
+			if(verbose) cat("tiles arrived in the desired projection\n")
+			resultProj = stack(result)
+		}
+	}
     
-	} else {
+	} else { # crsOut is NA, don't project
 		resultProj = stack(result)
 	}
 
 
-		#	resultProj@legend@colortable = result@legend@colortable
-
-
 	for(D in names(resultProj)) {
-      if(length(result[[D]]@legend@colortable)) {
+    if(length(result[[D]]@legend@colortable)) {
+				if(verbose) cat("copying colortable for ", D, "\n")
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
       if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
       # set NA's to transparent
-      resultProj[[D]]@legend@colortable =
+      	resultProj[[D]]@legend@colortable =
           c('#FFFFFF00',
               resultProj[[D]]@legend@colortable 
           )
-      values(resultProj[[D]]) = 1+values(resultProj[[D]])
-	}
-}
-} # end D in names(resultProj)
+      	values(resultProj[[D]]) = 1+values(resultProj[[D]])
+			} # end zeros
+		} # end have colortable
+	} # end D in names(resultProj)
 
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]

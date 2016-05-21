@@ -82,7 +82,7 @@ legendBreaks = function(pos,
   
 # line wrapping for legend labels
 	if(any(nchar(as.character(legend)) > width)) {
-		legend =  trim(
+		legend =  trimws(
   	  	gsub(
     			paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
 					'\\1\n ', 
@@ -98,7 +98,7 @@ legendBreaks = function(pos,
 		cropPos = unlist(lapply(theNewLines[toCrop], function(qq) qq[lines]))
 		legend = as.character(legend)
 		legend[toCrop] = 
-			trim(substr(legend[toCrop], 1, cropPos))
+			trimws(substr(legend[toCrop], 1, cropPos))
 	}
 	
 	if(missing(y.intersp)){
@@ -106,17 +106,21 @@ legendBreaks = function(pos,
 		if(is.character(legend)) {	
 			theNewLines = gregexpr('\n', as.character(legend))
 			y.intersp=max(
-    		c(0.5, unlist(lapply(theNewLines, function(qq) sum(qq>0))))
-			) - 0.25
+    		c(1.25, 
+						0.5+unlist(
+								lapply(theNewLines, function(qq) sum(qq>0))
+						)
+				) 
+		) - 0.25
 		} else {
 			y.intersp = 1
 		}
 	}
 	if(all(is.na(y.intersp))){
-  	y.intersp=0
+  	y.intersp=1
 	}
 	adj = rep_len(adj, 2)
-	adj[2] = adj[2] + y.intersp/3
+	adj[2] = adj[2] + y.intersp/4
 
   # get rid of transparency in col
   withTrans = grep("^#[[:xdigit:]]{8}$", col)
@@ -176,7 +180,10 @@ legendBreaks = function(pos,
       text(result$text$x, result$text$y,
           legend, col=text.col,adj=adj, cex=cex)   
     }      
-      par(xpd=oldxpd)
+   
+    if(outer){
+			par(xpd=oldxpd)
+		}
       
       return(invisible(result))
 }

@@ -12,7 +12,11 @@ legendTable = function(x,
   if(length(unit)>1 & type %in% names(unit)){
     unit = unit[type]
   }
-  
+
+  if(!length(x$label)) {
+		x$label = x$legend
+	}
+		
   if(!length(x$label))
     x$label = paste(
       '[',
@@ -26,12 +30,12 @@ legendTable = function(x,
     res = legendTableLatex(x, box, unit, collapse)
   }
   if(type=='html'){
-    res = legendTableHtml(x, box, unit)
+    res = legendTableHtml(x, box, unit, collapse)
   }
   res
 }
 
-legendTableHtml = function(x, box, unit) {
+legendTableHtml = function(x, box, unit, collapse) {
   
   box = box[length(box)]
   
@@ -43,6 +47,17 @@ legendTableHtml = function(x, box, unit) {
       'em"></span>', sep=''
   ))
   thetable$label = x$label
+	thetable = thetable[!is.na(x$col),]
+	
+  if(length(collapse))
+    thetable = paste(
+        paste(
+        		thetable$label, ' (',
+        		thetable$col, ')'
+        ),
+      	collapse=collapse
+    )
+	
   thetable
 }
 
