@@ -1,11 +1,3 @@
-# crsLL = CRS("+init=epsg:4326")
-crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
-
-# CRS("+init=epsg:3857") without the nagrids stuff
-crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs")
-
-#crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")
-#crsLlSphere = CRS("+proj=longlat +ellps=sphere")
 
 # extent of the Earth in the spherical mercator projection
 if(FALSE) {
@@ -41,6 +33,9 @@ extentMerc = new("Extent"
 
 .getExtent = function(x, crs=NA, extend=0, crsOut = crsMerc) {
   
+	if(is.null(x))
+		return(NULL)
+	
   # find the CRS's
   crsUse = projection(x)
   
@@ -48,13 +43,8 @@ extentMerc = new("Extent"
   if(all(is.na(crs))) {
     crs=crsLL
   }
-#	if(is.logical(crsUse)) { # it's probably NA,
-  if(all(is.na(crsUse))) {
-    crsUse=crs
-  }
-  
-  if(identical(crsUse ,"NA"))
-    crsUse = crs
+
+  if(is.na(crsUse)) crsUse = crs
   
   # if x is numeric, transform to extent  
   tileEps = sqrt(.Machine$double.neg.eps)
@@ -87,9 +77,8 @@ extentMerc = new("Extent"
     result =  extent(spTransform(x, crsOut))
   } else {
     # no rgdal, try to use raster, doesn't always work
-    x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)
-    x = raster::extend(extent(x), extend)
-    result = extent(projectExtent(x, crsOut))
+		message("install rgdal to use map projections")
+    result = extent(x)
   }
   
   result

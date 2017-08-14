@@ -49,7 +49,6 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 }	
 
 \references{
-\url{http://www.remotesensing.org/geotiff/proj_list/oblique_mercator.html},
 \url{http://en.wikipedia.org/wiki/Space-oblique_Mercator_projection}
 }
 \seealso{\code{\link[sp]{CRS}},\code{\link[sp]{spTransform}}}
@@ -70,7 +69,7 @@ text(nldUtm,labels=nldUtm$name)
 scaleBar(nldUtm, 'topright')
 
 nldRot = spTransform(nldCities,
-omerc(nldCities, angle=seq(25,45,by=1))
+omerc(nldCities, angle=seq(25,45,by=5))
 )
 projection(nldRot)
 
@@ -79,15 +78,6 @@ text(nldRot,labels=nldRot$name)
 scaleBar(nldRot, 'topright')
 insetMap(nldRot, 'bottomright',map=world)
 
-if(require('rgeos', quietly=TRUE) & require('geosphere', quietly=TRUE)){
-	nldMollCrs = moll(nldCities)
-	nldMoll = spTransform(nldCities, nldMollCrs)
-	map.new(nldMoll, buffer=2000)
-	text(nldMoll,labels=nldMoll$name)
-	scaleBar(nldMoll, 'topright')
-	
-	
-}
 }
 \dontrun{
 

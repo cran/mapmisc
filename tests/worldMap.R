@@ -1,4 +1,6 @@
 library('mapmisc')
+
+
 Spackages = c('rgdal', 'rgeos', 'geosphere', 'maptools')
 
 if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
@@ -11,20 +13,27 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	x=wrld_simpl[Dcountry,]
 
 	myCrsO = moll(x, angle=25)
-	
-	xTcrop = wrapPoly(x=wrld_simpl, crs=myCrsO)
+
+ plot(wrld_simpl)
+ plot(attributes(myCrsO)$regionLL, border='red', col='#0000FF10', add=TRUE)
+ 
+ myMap = openmap(myCrsO, zoom=1, fact=2)
+ map.new(myMap)
+ plot(myMap, add=TRUE)
+ gridlinesWrap(myCrsO, lty=2, col='orange')
+
+ xTcrop = wrapPoly(x=wrld_simpl, crs=myCrsO)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
-	map.new(xTcrop)
-	plot(attributes(myCrsO)$ellipse, add=TRUE, col='lightBlue', border='blue')
+	map.new(xTcrop, buffer=1000*1000)
+ plot(attributes(myCrsO)$ellipse, add=TRUE, col='lightBlue', border='blue')
 	plot(xTcrop,add=TRUE)
 	plot(xTcrop[DcountryT,], col='red', add=TRUE)
 	
 	gridlinesWrap(myCrsO, lty=2, col='orange')
 	
-	
-	
-	country='Madagascar'
+
+ country='Madagascar'
 	Dcountry  = grep(country, wrld_simpl$NAME)
 	x=wrld_simpl[Dcountry,]
 	

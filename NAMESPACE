@@ -1,6 +1,8 @@
 export(scaleBar,map.new,legendBreaks, col2html)
 export(colorScale)
 export(colourScale)
+export(crsModis, modisRaster, degreeRaster, getModisTiles)
+
 S3method(colourScale, Raster)
 S3method(colourScale, numeric)
 S3method(colourScale, factor)
@@ -8,7 +10,7 @@ S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
 export(openmap, osmTiles,insetMap, omerc,openmapAttribution, legendTable, tonerToTrans, rgbtToIndex)
-export(tpeqd)
+export(tpeqd, tpers)
 
 export(ocea, moll, wrapPoly, gridlinesWrap)
 
