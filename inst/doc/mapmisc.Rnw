@@ -26,13 +26,27 @@ opts_chunk$set(echo=TRUE,message=FALSE,
     fig.height=5,fig.width=3,out.width="0.3\\textwidth",
     dev.args=list(bg='white')
 )
-if( Sys.info()['user'] =='patrick') {
-  opts_chunk$set(dpi=72)	
-}else{	
-  opts_chunk$set(dpi=40)	
-}
 
 library('mapmisc')
+haveRgdal = requireNamespace('rgdal', quietly=TRUE)
+
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('fact'))
+  fact = 0.6
+# uncomment for nicer images
+# fact = 1 
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
+
+opts_chunk$set(dpi=72*fact)
 @
 
 This document will be incomplete if {\tt rgdal} is unavailable or there is on
@@ -64,7 +78,7 @@ meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
 @
 
 <<meuseProj,include=FALSE>>=
-if(requireNamespace('rgdal', quietly=TRUE)) {
+if(haveRgdal) {
   proj4string(meuse) <- CRS("+init=epsg:28992")
   meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
 } else {
@@ -379,9 +393,11 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 \section{Downloading background maps and city locations}
 
 Get a background map covering the extent of the meuse data
-<<openmap,eval=FALSE, purl=FALSE>>=
+<<openmap>>=
 library('mapmisc')
-nldTiles = openmap(meuse)
+if(haveRgdal)
+  nldTiles = openmap(meuse, 
+      cachePath = system.file('extdata', package='mapmisc'))
 @
 {\tt nldTiles} is a Raster with the same projection as {\tt meuse}
 <<openmapInfo>>=
@@ -493,7 +509,8 @@ Rotate the data 50 degrees clockwise with an oblique mercator projection.
 <<reproj,echo=TRUE>>=
 if(requireNamespace('rgdal', quietly=TRUE)){
   meuseRot = spTransform(meuse, omerc(meuse, -50))
-  tilesRot = openmap(meuseRot)
+  tilesRot = openmap(meuseRot, fact=2,
+      cachePath = system.file('extdata', package='mapmisc'))
   elevRot = projectRaster(nldElev, crs=projection(meuseRot))
   nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
 }
@@ -534,13 +551,15 @@ scaleBar(proj4string(meuseRot), bg="white")
 
 \section{Inset maps}
 
-<<world,eval=FALSE>>=
-world = openmap(extent(-10,30,40,60),path="osm-no-labels")
+<<world>>=
+world = openmap(
+    extent(-10,30,40,60),
+    path="osm-no-labels", 
+    cachePath = system.file('extdata', package='mapmisc'))
 @
 
 
 <<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
-
 
 # not rotated
 map.new(meuse,legendRight=TRUE)

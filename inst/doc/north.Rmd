@@ -14,26 +14,42 @@ internet connection when this document is compiled.  The full document is at
 
 
 ```{r setup, include=FALSE}
-
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
 
-fact = 0.6
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('fact'))
+  fact = 0.6
 # uncomment for nicer images
 # fact = 1 
-# or run R --slave -e "knitr::knit('north.Rmd')" fact=1
-theArgs = grep("^fact=", commandArgs(), value=TRUE)
-for(D in theArgs)
-  eval(parse(text=D))
+
+if(!exists('testing'))
+  testing=FALSE
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
 
 opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
-```{r data}
+```{r mapmiscCache, echo=FALSE, purl=FALSE}
+if(testing) {
+  getOption('mapmiscCachePath')
+  getOption('mapmiscCacheReadOnly')
+  options(mapmiscVerbose = TRUE)
+}
+```
 
+
+```{r data}
 coords = rbind(Alert = c(-62.338889, 82.501389),
   Qaanaaq = c(-69.238685,77.466335), 	
   'Alex Fjord' = c(-75.999722, 78.9),
@@ -50,7 +66,7 @@ x = SpatialPointsDataFrame(
         
 ```{r osm}
 if(haveRgdal){
-  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3))
+  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3), fact=fact)
   
   map.new(map)
   plot(map,add=TRUE)
@@ -64,7 +80,7 @@ if(haveRgdal){
 
 ```{r mapquest}
 if(haveRgdal){
-  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3))
+  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), fact=fact)
   
   map.new(mapSat)
   plot(mapSat,add=TRUE)
@@ -78,7 +94,7 @@ if(haveRgdal){
 ```{r mapquestDetail}
 if(haveRgdal){
   mapSat = openmap(x=x[x$name=='Hans island',], 
-    path='opentopomap', 
+    path='opentopomap', fact=fact,  
     buffer=c(4,1), zoom=2)
   
   map.new(x[x$name=='Hans island',], buffer=0.3)
@@ -94,7 +110,7 @@ if(haveRgdal){
 if(haveRgdal){
   xMerc = spTransform(x, omerc(x))
   mapMerc = openmap(xMerc, path='osm-no-labels',
-    zoom=3,
+    zoom=3, fact=fact,
     maxTiles=12, buffer=c(50,200)*1000)
   
   map.new(xMerc, buffer=50000)
@@ -107,19 +123,21 @@ if(haveRgdal){
 ```
 
 ```{r nrcan}
-if(haveRgdal){
-  xOmerc = spTransform(x, 
-    omerc(x,angle=5))
+if(haveRgdal & FALSE){
+  xOmerc = spTransform(x, omerc(x,angle=5))
   
   map = openmap(xOmerc, 
-    path=c('osm-no-labels', 'stamen-terrain-labels'), 
-    fact=1.5, maxTiles=12, 
+    path=c(
+      'osm-no-labels', 
+      'stamen-terrain-labels'), 
+    fact=fact, maxTiles=12, 
     buffer=c(2,10,10,0)*100*1000)
   
-  mapText = rgbtToIndex(map, pattern='stamen.terrain.labels')
+  mapText = rgbtToIndex(map, 
+    pattern='stamen.terrain.labels')
   
   map.new(map)
-  plot(map[['osm.no.labels']], add=TRUE)
+  raster::plot(map[['osm.no.labels']], add=TRUE)
   gridlinesWrap(crs=map, easts=seq(-180,0,by=2), col='red')
   plot(mapText,add=TRUE)
   points(xOmerc)
@@ -127,7 +145,6 @@ if(haveRgdal){
   scaleBar(xOmerc, 'bottom', bg='white')
   scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 }
-
 ```
 
 
@@ -135,7 +152,7 @@ if(haveRgdal){
 ```{r nrcanAlex}
 if(haveRgdal){
   map = openmap(x[x$name=='Alex Fjord',], 		
-    path='maptoolkit', zoom=3, 
+    path='maptoolkit', zoom=3, fact=fact, 
     buffer=c(5,5,2,1))   
   map.new(map)
   plot(map, add=TRUE)
@@ -167,11 +184,14 @@ if(haveRgdal) {
   
   
   rockMerc = spTransform(rockLL, crsMerc)
-  
+}
+```
+
+```{r southDataNoRgdal, include=FALSE}
 #dput(rockMerc, file='')
 #dput(waterhouseMerc, file='')
   
-} else {
+if(!haveRgdal) {
   
   waterhouseMerc = new("SpatialPoints"
     , coords = structure(c(19900911.3682423, -6393470.38497316), .Dim = 1:2, .Dimnames = list(
@@ -206,12 +226,12 @@ if(haveRgdal){
   
   
   southInset = openmap(x=waterhouseWrap, 
-    path='osm-no-labels',
+    path='osm-no-labels', fact=fact,
     buffer=c(4,1,2,1)*1000*1000)
   
 } else {
   southInset = openmap(waterhouseMerc, 
-    path='osm-no-labels',
+    path='osm-no-labels', fact=fact,
     buffer=c(4,0,0,1.5)*1000*1000, 
     crs=NA)
 }
@@ -229,7 +249,7 @@ insetMap(crs=mapMerc,
   pos='bottomright', 
   map=southInset, cropInset = NULL,
   lty=0)
-scaleBar(crs=mapMerc,  seg.len=35, pos='center')
+#scaleBar(crs=mapMerc,  seg.len=35, pos='center')
 sRes = scaleBar(mapMerc, 'bottomleft', cex=2)
 
 scaleCentre = SpatialPoints(
@@ -260,20 +280,22 @@ mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
 points(rockMerc, col='blue',cex=5)
-insetMap(crs=mapMercFine, 
+if(haveRgdal) {
+  insetMap(crs=mapMercFine, 
   pos='bottomright', 
   map=southInset, cropInset = NULL,
   lty=0)
-scaleBar(mapMercFine, 'bottomleft')
+  scaleBar(mapMercFine, 'bottomleft')
+}
 ```
 
 ```{r waterhouseLL}
 if(haveRgdal) {
   
-  mapLL = openmap(waterhouseLL, buffer=0.02)
+  mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
   
   map.new(mapLL)
-  plot(mapLL, add=TRUE)
+  plot(mapLL, add=TRUE, maxpixels = 10^6)
   points(waterhouseLL, pch=3, cex=5)
   insetMap(crs=mapLL, 
     pos='bottomright', 
@@ -285,7 +307,7 @@ if(haveRgdal) {
 
 ```{r rockLL}	
 if(haveRgdal) {
-  mapLLfine = openmap(rockLL, zoom=19, buffer=0.0002)  
+  mapLLfine = openmap(rockLL, zoom=19, fact=fact, buffer=0.0002)  
   map.new(mapLLfine)
   plot(mapLLfine, add=TRUE)	
   points(rockLL, col='blue', pch=3, cex=5)

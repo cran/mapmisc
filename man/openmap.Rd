@@ -9,14 +9,18 @@ Downloads map tiles from Openstreetmap.org and other servers.
 \usage{
 	openmap(x, zoom, 
 	  path="http://tile.openstreetmap.org/",
-	  maxTiles = 9, crs=projection(x),   
-	  buffer=0, fact=1, verbose=options()$mapmiscVerbose,
-	  cachePath=options()$mapmiscCachePath)
+	  maxTiles = 9, 
+	  crs=projection(x),   
+	  buffer=0, fact=1, 
+	 verbose=getOption('mapmiscVerbose'),
+	  cachePath=getOption('mapmiscCachePath')
+)
 
 	osmTiles(name, xyz, suffix)
 
 	openmapAttribution(name, 
-	  type=c('text','latex','markdown','html'), short=FALSE)
+	  type=c('text','latex','markdown','html', 'auto'), 
+	  short=FALSE)
 }
 
 \arguments{
@@ -64,10 +68,11 @@ by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.
-
 See \url{http://diseasemapping.r-forge.r-project.org/mapLayers.html} for a full set of 
 map tiles.
+
+Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.  If \code{type = 'auto'} then markdown format will be used unless a variable \code{mdToTex} is defined and equal to \code{TRUE}.
+
 }
 
 
@@ -95,6 +100,7 @@ openmapAttribution("stamen-toner", type='text')
 
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
   crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
@@ -103,16 +109,13 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 names(osmTiles())
 
 
-mytiles = openmap(myraster, zoom=6,
-	cachePath = system.file('extdata', package='mapmisc'))
-	
+\dontrun{
+	mytiles = openmap(myraster, zoom=6)
 
 	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
-
-\dontrun{
 	mytiles = openmap(myPoints,
 		path='waze', verbose=TRUE)
 	map.new(myPoints)

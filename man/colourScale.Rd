@@ -1,15 +1,18 @@
 \name{colourScale}
 \alias{colourScale}
 \alias{colorScale}
+\alias{breaksForRates}
 
 \title{Create colour scales}
 \description{
 Produces a scale of colours for plotting maps}
 \usage{
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
-	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
+	 col="YlOrRd", opacity=1, dec=NULL, digits = 6, firstBreak=NULL, 
+	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, ...)
 	colorScale(...)
+	breaksForRates(x, breaks = 10, transform = 0.1,
+      multiples = c(2, 4, 5, 10)) 
 	}
 
 \arguments{
@@ -21,12 +24,14 @@ Produces a scale of colours for plotting maps}
 	argument for \code{\link[RColorBrewer]{brewer.pal}}}
 	\item{opacity}{adds transparency to colours, either a single number,
 	vector of length 2, or vector of same length as \code{breaks}}
-	\item{dec}{Number of decimal places for the breaks}
+	\item{dec}{Number of decimal places for the breaks}	
+	\item{digits}{Number of significant figures}
 	\item{firstBreak}{If non-null, force the first break to take this value (often zero).}
 	\item{transform}{A list of two functions to transform \code{x} and inverse transform the breaks, or a numeric value specifying a Box-Cox parameter.}
 	\item{revCol}{Reverse the order of the colours.}
 	\item{exclude}{A vector of values to change to NA when they appear in \code{x}}
 	\item{labels}{Vector of names of levels, useful when \code{style='unique'}}
+	\item{multiples}{break points must be multiples of these numbers times a power of 10}
 	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}}.}
 }
 
@@ -49,6 +54,9 @@ Produces a scale of colours for plotting maps}
 
 \code{colorScale} passes all it's arguments to \code{colourScale}
 
+\code{breaksForRates} returns break points suitable for mapping incidence rates, which are positive and always
+include 1.0.
+
 }
 
 \value{A list with elements
@@ -61,6 +69,9 @@ Produces a scale of colours for plotting maps}
 \seealso{\code{\link{legendBreaks}},\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
 
 \examples{
+
+breaksForRates(13.6, breaks = 7) 
+
 Npoints = 20
 myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
