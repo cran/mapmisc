@@ -25,16 +25,14 @@ degreeRaster
 	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
 	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
 	
-	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation
-	from \url{ftp://ftp.glcf.umd.edu/glcf/SRTM/Degree_Tiles/}.
-	
+	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
 }
 
 
 
 \references{
 \url{https://nsidc.org/data/docs/daac/mod10_modis_snow/landgrid.html},
-\url{http://spatialreference.org/ref/sr-org/modis-sinusoidal/}
+\url{https://spatialreference.org/ref/sr-org/modis-sinusoidal/}
 }
 
 

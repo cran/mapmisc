@@ -118,7 +118,118 @@ GNsearch = function(..., crs=crsLL) {
 }
 
 
-geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
+geocode = function(x, 
+  extent,
+  lang = gsub("(_|[:]).*", "", Sys.getenv('LANGUAGE'))
+  ) {
+#  x = paste(c('ottawa','nain','winnipeg'), 'canada', sep=',')
+
+  if(length(getOption('mapmiscVerbose'))) { 
+    verbose = getOption('mapmiscVerbose')
+  } else {
+    verbose=FALSE
+  }
+
+  cachePath=getOption('mapmiscCachePath')
+  if(is.null(cachePath)) {
+    cachePath = tempdir()
+  }
+  if(!nchar(cachePath)) {
+    cachePath = '.'
+  }
+  cachePath = file.path(cachePath,'geocode')
+  dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
+
+  if(!nchar(lang)) {
+    lang = 'en'
+  }
+  langString = paste0(paste(c('name', lang), collapse=':'), ": ")
+
+  xDf = data.frame(
+  orig = x, 
+  url=paste0(
+    'https://nominatim.openstreetmap.org/search/',
+    gsub("[[:space:]]+", "%20", x),  
+    '?format=geojson&limit=5&namedetails=1'),
+  file = file.path(cachePath, make.names(x)),
+  stringsAsFactors=FALSE
+  )
+
+  x3 = list()
+  for(D in 1:nrow(xDf)) {
+      if(verbose) {
+        message(xDf[D,'orig'])
+      }
+
+    cacheFile = xDf[D,'file']
+    if(file.exists(cacheFile)) { 
+      if(verbose) {
+        message("found in cache ", cachePath)
+      }
+    } else {
+      downloadFileMapmisc(url = xDf[D,'url'], destfile = xDf[D,'file'],
+        quiet=!verbose)
+    }
+    x3[[D]] = rgdal::readOGR(
+        dsn = cacheFile,
+        verbose=verbose, 
+        stringsAsFactors=FALSE)
+
+    # there might be more than one result
+    # get rid of ways
+    isNotWay = !x3[[D]]$osm_type == 'way'
+    if(any(isNotWay)) {
+        x3[[D]] = x3[[D]][isNotWay,]
+      }
+
+
+    # keep only places (not river, etc) if there are places
+      isCat = x3[[D]]$category =='place'
+      if(any(isCat)) {
+        x3[[D]] = x3[[D]][isCat,]
+      }
+    # keep the place with the most name information
+    # it's probably most important
+    mostNames = which.max(nchar(x3[[D]]$namedetails))
+    if(length(mostNames)) {
+      x3[[D]] = x3[[D]][mostNames, ]
+    }
+
+    x3[[D]] = x3[[D]][1,]   
+
+    named = trimws(scan(text=gsub("^[{]|[}]$", "", x3[[D]]$namedetails), 
+        sep=',', what='a', quiet=TRUE))
+
+    x3[[D]]$name = gsub(langString, "", 
+      c(grep(langString, named,
+      value=TRUE), NA)[1])
+
+  }
+
+  allNames = unique(unlist(lapply(x3, names)))
+  for(D in 1:length(x3)) {
+    missingHere = setdiff(allNames, names(x3[[D]]))
+    for(D2 in missingHere) x3[[D]][[D2]] = NA
+  }
+
+x4=do.call(rbind, x3)
+x4$orig = xDf$orig
+
+x4$name[is.na(x4$name)] = gsub(", .*", "", x4$display_name[is.na(x4$name)])
+
+firstCols = c('name','orig','type','category','importance')
+omitCols = c('namedetails','icon')
+
+x4@data = cbind(
+  x4@data[,intersect(firstCols, names(x4))],
+  x4@data[,setdiff(names(x4), c(omitCols, firstCols))]
+  )
+
+x4
+
+}
+
+geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
   
   if(length(getOption('mapmiscVerbose'))) { 
     verbose = getOption('mapmiscVerbose')
@@ -149,7 +260,7 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
     if(verbose)
       message("found in cache ", cachePath)
     load(cacheFile)
-  }	else if(requireNamespace("dismo", quietly = TRUE)) {
+  }	else if(FALSE) { #requireNamespace("dismo", quietly = TRUE)) {
     if(verbose)
       message("not found in cache, retrieving")
   	Sys.sleep(1)
