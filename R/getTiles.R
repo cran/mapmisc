@@ -24,9 +24,11 @@ getRasterNrcan = function(zoom) {
   # http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3978/MapServer
   
   origin = c(-3.46558E7, 3.931E7) 
+#  nrCrs = CRS(
+#    "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")  
+ #+init=epsg:3978")
   nrCrs = CRS(
-    "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")  
-#+init=epsg:3978")
+  "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs") 
   
   
   nrRes = c(38364.660062653464,
@@ -186,7 +188,7 @@ getTilesMerc = function(
       
       thisimage = try(raster::brick(Dfile), silent=TRUE)
       
-      if(class(thisimage)=='try-error') {
+      if(any(class(thisimage)=='try-error')) {
         if(verbose) warning("tile ", Dfile, " cannot be loaded")
         
         thisimage = raster(

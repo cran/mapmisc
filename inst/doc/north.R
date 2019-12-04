@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
@@ -24,7 +24,7 @@ options(
 
 opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 
-## ----data----------------------------------------------------------------
+## ----data---------------------------------------------------------------------
 coords = rbind(Alert = c(-62.338889, 82.501389),
   Qaanaaq = c(-69.238685,77.466335), 	
   'Alex Fjord' = c(-75.999722, 78.9),
@@ -37,7 +37,7 @@ x = SpatialPointsDataFrame(
   proj4string=crsLL
 )
 
-## ----osm-----------------------------------------------------------------
+## ----osm----------------------------------------------------------------------
 if(haveRgdal){
   map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3), fact=fact)
   
@@ -49,7 +49,7 @@ if(haveRgdal){
   scaleBar(x, 'left', seg.len=0, bty='n')
 }
 
-## ----mapquest------------------------------------------------------------
+## ----mapquest-----------------------------------------------------------------
 if(haveRgdal){
   mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), fact=fact)
   
@@ -61,7 +61,7 @@ if(haveRgdal){
   scaleBar(x, 'left', seg.len=0, bty='n')
 }
 
-## ----mapquestDetail------------------------------------------------------
+## ----mapquestDetail-----------------------------------------------------------
 if(haveRgdal){
   mapSat = openmap(x=x[x$name=='Hans island',], 
     path='opentopomap', fact=fact,  
@@ -74,7 +74,7 @@ if(haveRgdal){
   scaleBar(x, 'bottomright')
 }
 
-## ----omerc---------------------------------------------------------------
+## ----omerc--------------------------------------------------------------------
 if(haveRgdal){
   xMerc = spTransform(x, omerc(x))
   mapMerc = openmap(xMerc, path='osm-no-labels',
@@ -89,7 +89,7 @@ if(haveRgdal){
   scaleBar(xMerc, 'left', seg.len=0, bty='n')
 }
 
-## ----nrcan---------------------------------------------------------------
+## ----nrcan--------------------------------------------------------------------
 if(haveRgdal & FALSE){
   xOmerc = spTransform(x, omerc(x,angle=5))
   
@@ -113,7 +113,7 @@ if(haveRgdal & FALSE){
   scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 }
 
-## ----nrcanAlex-----------------------------------------------------------
+## ----nrcanAlex----------------------------------------------------------------
 if(haveRgdal){
   map = openmap(x[x$name=='Alex Fjord',], 		
     path='maptoolkit', zoom=3, fact=fact, 
@@ -125,7 +125,7 @@ if(haveRgdal){
   scaleBar(x, 'bottomleft')
 }
 
-## ----southData-----------------------------------------------------------
+## ----southData----------------------------------------------------------------
 
 waterhouseLL = SpatialPoints(
   cbind(x=178.7729285, y=-49.6941201), 
@@ -145,7 +145,7 @@ if(haveRgdal) {
   rockMerc = spTransform(rockLL, crsMerc)
 }
 
-## ----southDataNoRgdal, include=FALSE-------------------------------------
+## ----southDataNoRgdal, include=FALSE------------------------------------------
 #dput(rockMerc, file='')
 #dput(waterhouseMerc, file='')
   
@@ -174,11 +174,11 @@ if(!haveRgdal) {
   )
 }
 
-## ----southInset----------------------------------------------------------
+## ----southInset---------------------------------------------------------------
 if(haveRgdal){
   
   waterhouseWrap = spTransform(
-    waterhouseMerc, moll(waterhouseMerc, angle=25)
+    waterhouseMerc, moll(waterhouseMerc)
   )
   
   
@@ -193,7 +193,7 @@ if(haveRgdal){
     crs=NA)
 }
 
-## ----waterhouseMerc------------------------------------------------------
+## ----waterhouseMerc-----------------------------------------------------------
 mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA)
 
 map.new(mapMerc)
@@ -226,7 +226,7 @@ if(haveRgdal & require('geosphere', quietly=TRUE)){
 }
 
 
-## ----rockMerc------------------------------------------------------------
+## ----rockMerc-----------------------------------------------------------------
 
 mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
 
@@ -236,12 +236,12 @@ points(rockMerc, col='blue',cex=5)
 if(haveRgdal) {
   insetMap(crs=mapMercFine, 
   pos='bottomright', 
-  map=southInset, cropInset = NULL,
+  map=southInset, 
   lty=0)
   scaleBar(mapMercFine, 'bottomleft')
 }
 
-## ----waterhouseLL--------------------------------------------------------
+## ----waterhouseLL-------------------------------------------------------------
 if(haveRgdal) {
   
   mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
@@ -256,7 +256,7 @@ if(haveRgdal) {
   scaleBar(mapLL, 'bottomleft')
 }
 
-## ----rockLL--------------------------------------------------------------
+## ----rockLL-------------------------------------------------------------------
 if(haveRgdal) {
   mapLLfine = openmap(rockLL, zoom=19, fact=fact, buffer=0.0002)  
   map.new(mapLLfine)

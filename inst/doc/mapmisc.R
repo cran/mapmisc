@@ -1,4 +1,4 @@
-## ----setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE-----------
+## ----setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE----------------
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
     dev='png', 
@@ -28,13 +28,13 @@ options(
 
 opts_chunk$set(dpi=72*fact)
 
-## ----meusedata,echo=TRUE-------------------------------------------------
+## ----meusedata,echo=TRUE------------------------------------------------------
 library('sp')
 data('meuse')
 coordinates(meuse) <- ~x+y
 class(meuse)
 
-## ----meuseProj,include=FALSE---------------------------------------------
+## ----meuseProj,include=FALSE--------------------------------------------------
 if(haveRgdal) {
   proj4string(meuse) <- CRS("+init=epsg:28992")
   meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
@@ -322,25 +322,25 @@ if(haveRgdal) {
   )
 }
 
-## ----dataneth------------------------------------------------------------
+## ----dataneth-----------------------------------------------------------------
 library('mapmisc')
 data('netherlands')
 
-## ----classElev-----------------------------------------------------------
+## ----classElev----------------------------------------------------------------
 class(nldElev)
 nldElev = crop(nldElev, extend(extent(meuse), 1000))
 
-## ----openmap-------------------------------------------------------------
+## ----openmap------------------------------------------------------------------
 library('mapmisc')
 if(haveRgdal)
   nldTiles = openmap(meuse)
 
-## ----openmapInfo---------------------------------------------------------
+## ----openmapInfo--------------------------------------------------------------
 class(nldTiles)
 projection(nldTiles)
 projection(meuse)
 
-## ----citiesInfo----------------------------------------------------------
+## ----citiesInfo---------------------------------------------------------------
 class(nldCities)
 names(nldCities)
 projection(nldCities)
@@ -366,16 +366,16 @@ plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6,legend.mar=2, legend.line=
 scaleBar(meuse,pos="topleft",bg="white")
 
 
-## ----meuseScale----------------------------------------------------------
+## ----meuseScale---------------------------------------------------------------
 cuScale = colourScale(meuse$copper, breaks=5, style='equal', 
     opacity=0.8, dec=-1, firstBreak=0)
 
-## ----elevScale-----------------------------------------------------------
+## ----elevScale----------------------------------------------------------------
 elevScale = colourScale(nldElev, style='equal',
     breaks=6, col=terrain.colors,
     firstBreak=0, dec=-1,opacity=c(0.2, 0.9))
 
-## ----soilScale-----------------------------------------------------------
+## ----soilScale----------------------------------------------------------------
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
     labels=c("Calcareous","Non-Calc's","Red Brick"))
 soilScale = colourScale(meuse$soilFac, col="Set2")
@@ -400,7 +400,7 @@ image(nldElev, breaks=elevScale$breaks, col=elevScale$colOpacity,
     legend=FALSE,add=TRUE)
 legendBreaks("left", breaks=elevScale, title='Metres',bg="white")
 
-## ----reproj,echo=TRUE----------------------------------------------------
+## ----reproj,echo=TRUE---------------------------------------------------------
 if(requireNamespace('rgdal', quietly=TRUE)){
   meuseRot = spTransform(meuse, omerc(meuse, -50))
   tilesRot = openmap(meuseRot, fact=2)
@@ -408,7 +408,7 @@ if(requireNamespace('rgdal', quietly=TRUE)){
   nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
 }
 
-## ----reproj2,echo=FALSE--------------------------------------------------
+## ----reproj2,echo=FALSE-------------------------------------------------------
 if(!requireNamespace('rgdal', quietly=TRUE)) {
   tilesRot = nldTiles
   elevRot = nldElev
@@ -436,7 +436,7 @@ points(meuseRot,col="red", cex=0.3)
 
 scaleBar(proj4string(meuseRot), bg="white")
 
-## ----world---------------------------------------------------------------
+## ----world--------------------------------------------------------------------
 world = openmap(
     extent(-10,30,40,60),
     path="osm-no-labels")
