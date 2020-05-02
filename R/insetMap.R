@@ -45,7 +45,7 @@ extentSmall = extentUsr
 		
 if(is.character(crs))
 			crs = CRS(crs)
-if(class(crs) != "CRS")
+if(any(class(crs) != "CRS"))
 	crs = CRS(proj4string(crs))
 
 bboxSmall = t(bbox(extentSmall))
@@ -167,6 +167,8 @@ N = length(xsp)
 xsp@coords = (xsp@coords - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
 		bbSmall[rep(1,N),]
 
+toScale = list(shift1 = bbOrig[1,], scale=scale, shift2 = bbSmall[1,])		
+
 xsp = raster::crop(xsp, map)
 xsp = coordinates(xsp)
 
@@ -201,6 +203,8 @@ if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {
 if(outer) {
 	par(xpd=oldxpd)
 }	
+
+attributes(xsp)$toScale = toScale
 
 return(invisible(xsp))
 }
