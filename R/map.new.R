@@ -9,9 +9,9 @@ map.new = function(x, legendRight=FALSE, buffer=0,
 	
   xpoints = as(extend(extent(x), buffer), 'SpatialPoints')
 
-	thecrs = try(proj4string(x), silent=TRUE) 
+	thecrs = try(crs(x), silent=TRUE) 
 	if(any(class(thecrs)!="try-error") & !is.na(thecrs)) {
-			proj4string(xpoints) = CRS(thecrs)
+			crs(xpoints) = crs(thecrs)
 	}
   
   oldpar = par(c('mar','xaxs','yaxs', 'bty'))

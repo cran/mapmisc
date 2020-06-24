@@ -3,6 +3,7 @@ omercProj4string = function(
     x=0,y=0, inverseAngle=0,
     scale=1,
     ellps='WGS84', units='m',
+    datum='WGS84',
     crs=TRUE) {
   
 #  negAngle = angle<0
@@ -31,6 +32,7 @@ omercProj4string = function(
       " +gamma=", inverseAngle,
       " +ellps=", ellps,
       " +units=", units,
+      ' +datum=', datum,
       sep="")
   
   if(any(whichZeros)) {
@@ -43,12 +45,14 @@ omercProj4string = function(
         " +y_0=", y[whichZeros] ,
         " +ellps=", ellps,
         " +units=", units,
+        ' +datum=', datum,
         sep="")
   }
 
   
-  if(crs) 
+  if(crs) {
     result = lapply(result, CRS)
+  }
   
   result
 }
@@ -121,7 +125,7 @@ omerc = function(
     return(rotatedCRS)
   }
   
-  crs = projection(x)
+  crs = crs(x)
   if(is.na(crs)){
     crs = crsLL
   }
@@ -166,7 +170,7 @@ omerc = function(
     # preserve distances between points
     if(!is.null(preserve)) {
       # convert to LL
-      if(!isLonLat(projection(preserve))){
+      if(!isLonLat(crs(preserve))){
         preserve = spTransform(preserve, crsLL)
       }
       # great circle distance

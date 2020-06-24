@@ -7,6 +7,8 @@ opts_chunk$set(echo=TRUE,message=FALSE,
     dev.args=list(bg='white')
 )
 
+options("rgdal_show_exportToProj4_warnings"="none") 
+
 library('mapmisc')
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 
@@ -25,7 +27,6 @@ options(
   mapmiscCachePath = mapmiscCachePath,
   mapmiscCacheReadOnly = mapmiscCacheReadOnly
   )
-
 opts_chunk$set(dpi=72*fact)
 
 ## ----meusedata,echo=TRUE------------------------------------------------------

@@ -1,4 +1,5 @@
 ## ----setup, include=FALSE-----------------------------------------------------
+options("rgdal_show_exportToProj4_warnings"="none") 
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
@@ -38,8 +39,9 @@ x = SpatialPointsDataFrame(
 )
 
 ## ----osm----------------------------------------------------------------------
-if(haveRgdal){
-  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3), fact=fact)
+if(haveRgdal & FALSE){
+  map = openmap(x, path='osm-no-labels', 
+    maxTiles=12, buffer=c(30,3), fact=fact)
   
   map.new(map)
   plot(map,add=TRUE)
@@ -87,30 +89,6 @@ if(haveRgdal){
   text(xMerc, label=xMerc$name, pos=4)
   scaleBar(xMerc, 'bottomleft')
   scaleBar(xMerc, 'left', seg.len=0, bty='n')
-}
-
-## ----nrcan--------------------------------------------------------------------
-if(haveRgdal & FALSE){
-  xOmerc = spTransform(x, omerc(x,angle=5))
-  
-  map = openmap(xOmerc, 
-    path=c(
-      'osm-no-labels', 
-      'stamen-terrain-labels'), 
-    fact=fact, maxTiles=12, 
-    buffer=c(2,10,10,0)*100*1000)
-  
-  mapText = rgbtToIndex(map, 
-    pattern='stamen.terrain.labels')
-  
-  map.new(map)
-  raster::plot(map[['osm.no.labels']], add=TRUE)
-  gridlinesWrap(crs=map, easts=seq(-180,0,by=2), col='red')
-  plot(mapText,add=TRUE)
-  points(xOmerc)
-  text(xOmerc, label=xOmerc$name, pos=4)
-  scaleBar(xOmerc, 'bottom', bg='white')
-  scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 }
 
 ## ----nrcanAlex----------------------------------------------------------------
