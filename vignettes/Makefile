@@ -1,3 +1,4 @@
+
 all: north.html mapmisc.pdf 
 
 clean:
@@ -9,6 +10,8 @@ empty:
 %.pdf: %.tex
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
+#	gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dPrinted=false -sOutputFile='$@' '$@'
+
 #	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
 %.md: %.Rmd

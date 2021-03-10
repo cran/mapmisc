@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps
-Version: 1.7.9
-Date: 2020-06-22
+Version: 1.8.0
+Date: 2021-03-09
 Depends: sp, raster, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics
 Suggests: RColorBrewer, classInt, rgdal, rgeos, geosphere, knitr,
@@ -14,6 +14,6 @@ Description: A minimal, light-weight set of tools for producing nice looking map
 License: GPL
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-06-23 17:34:48 UTC; patrick
+Packaged: 2021-03-10 17:32:45 UTC; patrick
 Repository: CRAN
-Date/Publication: 2020-06-24 08:20:08 UTC
+Date/Publication: 2021-03-10 23:50:02 UTC
