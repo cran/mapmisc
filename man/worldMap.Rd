@@ -1,6 +1,7 @@
 \name{worldMap}
 \alias{worldMap}
 \alias{worldmap}
+\alias{isohedron}
 
 \docType{data}
 \title{
@@ -19,15 +20,14 @@ Country borders from naturalearthdata.com
 \examples{
 
 # soil data
-library("mapmisc")
 
 data("worldMap")
-myMap = openmap(worldMap, zoom=1, fact=1.5)
-map.new(worldMap)
-plot(myMap, add=TRUE)
+worldMap = terra::unwrap(worldMap)
+oldpar=map.new(worldMap)
 plot(worldMap, border='red', lwd=3, add=TRUE)
 plot(worldMap[worldMap$NAME ==  'Brazil',],
 	add=TRUE, col='green')
+par(oldpar)
 
 }
 

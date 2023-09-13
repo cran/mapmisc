@@ -19,14 +19,14 @@ scaleBar(crs, pos = "bottomright",
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderMap=NULL,
-			cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
-			outer=TRUE, ...) 
+			cropInset = terra::ext(-180, 180,  -47, 71),
+			outer=TRUE, inset = c(0.1, 0.1), ...) 
 }
 
 \arguments{
   \item{crs}{
-A \code{CRS} object, proj4 string, or an object from which a projection 
-can be extracted with \code{proj4string(crs)}
+A character string from which a projection 
+can be extracted with \code{terra::crs}
 }
   \item{pos}{
 Position, as specified in the \code{legend} function.
@@ -45,6 +45,7 @@ passed to \code{\link{openmap}}'s path argument}
 \item{col}{Colour for shaded region of inset map}
 \item{borderMap}{border style for the inset map (passed to \code{\link[graphics]{polygon}})}
 \item{cropInset}{Crop the insert map to this extent}
+\item{inset}{how far from the border to put the inset map}
 \item{\dots}{
 Additional arguments passed to \code{\link[graphics]{legend}} for \code{scaleBar} 
 or \code{\link[graphics]{polygon}} (for \code{insetMap}).
@@ -56,42 +57,43 @@ from the centre of the plot and travelling to the right.  The length of the bar 
 of 6 characters times \code{scale.cex}.  
 
 }
+
+\value{A list containig coordinates of the elements of the scale bar.}
+
 \author{
 Patrick Brown
 }
 
-\seealso{\code{\link[raster]{scalebar}}, \code{\link[sp]{spplot}}}
 
 \examples{
 
 Npoints = 20
-myPoints = SpatialPointsDataFrame(
-	cbind(runif(Npoints), 51+runif(Npoints)), 
-	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
-	y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)),
-	proj4string=mapmisc::crsLL)
+set.seed(0)
+myPoints = vect(
+	cbind(runif(Npoints)-0.1, 51+runif(Npoints)), 
+	atts=data.frame(
+		y1=c(NA, rnorm(Npoints-1)), 
+	    y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)
+	),
+	crs=crsLL)
 
-\dontrun{
-mymap = openmap(myPoints)
-}
+
 
 breaks = c(-100, -1, 1, Inf)
 thecol = c('red','orange','blue')
 
 
-map.new(myPoints)
-\dontrun{
-plot(mymap,add=TRUE)
-}
+oldpar = map.new(myPoints)
 plot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, seg.len=2)
-temp=legendBreaks("topleft", legend=breaks, col=thecol)
+legendBreaks("topleft", legend=breaks, col=thecol)
 
-\dontrun{
-thedot = insetMap(myPoints, "bottomleft",col='#00000000', lty=0)
+thedot = insetMap(crs=myPoints, pos="bottomleft",
+	 col='#00000000', lty=0, outer=FALSE, width=0.5)
 points(thedot)
-}
+
+par(oldpar)
 }
 

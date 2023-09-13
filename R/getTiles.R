@@ -3,11 +3,11 @@ getRowCol <- function(extMerc,
   zoom, 
   rasterSphere = .getRasterMerc(zoom)){
   
-  Sy=rowFromY(rasterSphere, c(
-      ymax(extMerc), ymin(extMerc)
+  Sy=terra::rowFromY(rasterSphere, c(
+      terra::ymax(extMerc), terra::ymin(extMerc)
     ))
-  Sx=colFromX(rasterSphere, c(
-      xmin(extMerc), xmax(extMerc)
+  Sx=terra::colFromX(rasterSphere, c(
+      terra::xmin(extMerc), terra::xmax(extMerc)
     ))
   
   
@@ -18,16 +18,13 @@ getRowCol <- function(extMerc,
 }
 
 
-getRasterNrcan = function(zoom) {
+getRasterNrcanDontNeed = function(zoom) {
   
   # raster for maps from 
   # http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3978/MapServer
   
   origin = c(-3.46558E7, 3.931E7) 
-#  nrCrs = CRS(
-#    "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")  
- #+init=epsg:3978")
-  nrCrs = CRS(
+  nrCrs = terra::crs(
   "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs") 
   
   
@@ -51,28 +48,29 @@ getRasterNrcan = function(zoom) {
     4.6302175937685215
   )
   
-  worldLL = raster(
-    extent(-180,180,-90,90), 
+  eps=0.1
+  worldLL = terra::rast(
+    terra::ext(-180+eps,180-eps,-90+eps,90-eps), 
     crs=crsLL,
     res=0.01
   )
   
-  worldNrcan = projectRaster(worldLL, crs=nrCrs, res=1000)
+  worldNrcan = terra::project(worldLL, nrCrs, res=1000)
   
-  nrcanExtent = extent(
+  nrcanExtent = terra::ext(
     -4282638.06150141,
     4852210.1755664,
     -5153821.09213678,
     4659267.000000001)
   
-  nrcanExtent = extent(
+  nrcanExtent = terra::ext(
     -7786476.885838887,
     7148753.233541353,
     -927807.6591668031,
     7928343.534071138
   )
   
-  nrcanRaster = raster(
+  nrcanRaster = terra::rast(
     nrcanExtent,
     nrow = 2^(1+zoom),
     ncol = 2^(1+zoom),
@@ -81,20 +79,20 @@ getRasterNrcan = function(zoom) {
   
   N = 2^zoom 
   
-  raster(extentMerc, nrows = N, ncols=N, crs=crsMerc)
+  terra::rast(ext(extentMerc), nrows = N, ncols=N, crs=crsMerc)
 }
 
-getRowColNrcan <- function(
+getRowColNrcanDontNeed <- function(
   extMerc,
   zoom, 
   rasterSphere = .getRasterMerc(zoom)){
   
   
-  Sy=rowFromY(rasterSphere, c(
-      ymax(extMerc), ymin(extMerc)
+  Sy=terra::rowFromY(rasterSphere, c(
+      terra::ymax(extMerc), terra::ymin(extMerc)
     ))
-  Sx=colFromX(rasterSphere, c(
-      xmin(extMerc), xmax(extMerc)
+  Sx=terra::colFromX(rasterSphere, c(
+      terra::xmin(extMerc), terra::xmax(extMerc)
     ))
   
   
@@ -114,65 +112,104 @@ nTilesMerc <- function(extMerc,zoom){
 }
 
 
-getTilesMerc = function(
-  extMerc=extentMerc, 
+getTiles = function(
+  outraster, 
   zoom=1, 
   path="http://tile.openstreetmap.org/",
   cachePath='.',
-  cacheDir= make.names(gsub(
-          "^http.*//([[:alpha:]][.])*((tile|basemap)s?[.][[:digit:]]?)?(openstreetmap[.])?|[[:punct:]]$", 
-          "", path)),
+  cacheDir,
   verbose=FALSE, suffix = '.png',
   tileNames = 'zxy'){
+
+  if(missing(cacheDir)) {
+    cacheDir = make.names(gsub(
+          "^http.*//([[:alpha:]][.])*((tile|basemap)s?[.][[:digit:]]?)?(openstreetmap[.])?|[[:punct:]]$", 
+          "", path))
+  }
   
-  
-  cacheDir = file.path(cachePath, cacheDir)
+  maxPixelsPerCycle = 1e5
+  NtestCols = 100
+  NrowsPerCycle = floor(maxPixelsPerCycle/terra::ncol(outraster)) # number of rows of out raster to process simultaneously
+
+  cacheDir2 = file.path(cachePath, cacheDir)
   
   rasterSphere = .getRasterMerc(zoom)  
   
-  SrowCol = getRowCol(extMerc, rasterSphere=rasterSphere)
-  
-  rasters = list()
-  colourtable = NULL
-  
-  
-  for(Dx in SrowCol$col){
-    
-    rasterCol= list()
-    for(Dy in SrowCol$row) {
-      
-      Dcell = cellFromRowCol(rasterSphere, Dy, Dx)
-      Dextent = extent(rasterFromCells(rasterSphere, Dcell))
-      
-      
+  samplePoints = rast(terra::ext(outraster), res= (terra::xmax(outraster)-terra::xmin(outraster))/NtestCols, crs=terra::crs(outraster))
+  samplePoints = vect(terra::xyFromCell(samplePoints, 1:terra::ncell(samplePoints)), crs=terra::crs(outraster))
+  xMerc = terra::project(samplePoints, crsMerc)
+
+
+  SrowColFull = terra::cellFromXY(rasterSphere, terra::crds(xMerc))
+#  SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
+  SrowColFull = cbind(cell = SrowColFull, row = terra::rowFromCell(rasterSphere, SrowColFull), 
+    col = terra::colFromCell(rasterSphere, SrowColFull))
+
+  SrowColFull = SrowColFull[!is.na(SrowColFull[,1]), ,drop=FALSE]
+  SrowCol = SrowColFull[!duplicated(SrowColFull[,c('row','col')]), ,drop=FALSE]#c('row','col')]
+  SrowCol = SrowCol[order(SrowCol[,'col'], SrowCol[,'row']),,drop=FALSE]
+  SrowCol = as.data.frame(SrowCol)
+#  SrowCol$newBlock = !c(FALSE, diff(SrowCol[,'col'])==0 & diff(SrowCol[,'row'])==1)
+#  SrowCol$block = cumsum(SrowCol$newBlock)
+
+
       if(tileNames == 'zxy') {
-        Dcache = file.path(cacheDir, zoom, Dx-1)
-        Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
-        Dtile = paste(Dy-1, suffix,sep='')
-        Durl = paste(Dpath, Dtile, sep='')
+        SrowCol$cache = file.path(cacheDir2, zoom, SrowCol[,'col']-1)
+        SrowCol$path = paste(path,zoom,'/',SrowCol[,'col']-1,'/',sep='')
+        SrowCol$tile = paste(SrowCol[,'row']-1, suffix,sep='')
+        SrowCol$url = paste(SrowCol$path, SrowCol$tile, sep='')
       } else if (tileNames == 'zxy=') {
-        Dcache = cacheDir
-        Dtile = paste('z=',zoom, '&x=', Dx-1, '&y=',Dy-1,suffix, sep='')
-        Durl = paste(path, Dtile, sep='')				
+        SrowCol$cache = cacheDir2
+        SrowCol$tile = paste('z=',zoom, '&x=', SrowCol[,'col']-1, '&y=',SrowCol[,'row']-1,suffix, sep='')
+        SrowCol$url = paste(path, SrowCol$tile, sep='')       
       } else if (tileNames == 'xyz=') {
-        Dcache = cacheDir
-        Dtile = paste('x=',Dx-1, '&y=', Dy-1, '&z=',zoom,suffix, sep='')
-        Durl = paste(path, Dtile, sep='')				
+        SrowCol$cache = cacheDir2
+        SrowCol$tile = paste('x=',SrowCol[,'col']-1, '&y=', SrowCol[,'row']-1, '&z=',zoom,suffix, sep='')
+        SrowCol$url = paste(path, SrowCol$tile, sep='')       
       } else if (tileNames == 'xyz') {
-        Dcache = cacheDir
-        Dtile = paste(Dx-1, '/', Dy-1, '/',zoom,suffix, sep='')
-        Durl = paste(path, Dtile, sep='')				
+        SrowCol$cache = cacheDir2
+        SrowCol$tile = paste(SrowCol[,'col']-1, '/', SrowCol[,'row']-1, '/',zoom,suffix, sep='')
+        SrowCol$url = paste(path, SrowCol$tile, sep='')       
       } else if (tileNames == 'zyx') {
-        Dcache = file.path(cacheDir, zoom, Dy-1)
-        Dpath = paste(path,zoom,'/',Dy-1,'/',sep='')
-        Dtile = paste(Dx-1, suffix, sep='')
-        Durl = paste(Dpath, Dtile, sep='')
+        SrowCol$cache = file.path(cacheDir2, zoom, SrowCol[,'row']-1)
+        SrowCol$path = paste(path,zoom,'/',SrowCol[,'row']-1,'/',sep='')
+        SrowCol$tile = paste(SrowCol[,'col']-1, suffix, sep='')
+        SrowCol$url = paste(SrowCol$path, SrowCol$tile, sep='')
       } else {
         warning('tileNames must be zxy or zyx or xyz=')
       }
       
+    SrowCol$file = file.path(SrowCol$cache , SrowCol$tile )
+    SrowCol$index = 1:nrow(SrowCol)
+  rasters = list()
+#  colourtableList = list()
+  
+#  uniqueBlock = unique(SrowCol$block)
+ # for(Dblock in uniqueBlock){
+    
+#    tilesHere = which(SrowCol$block == Dblock)
+#    colourtableList[[Dblock]] = list()
+#    rasters[[Dblock]] = list()
+
+  if(nrow(SrowCol) > 50) {
+    warning("number of map tiles is large, zoom ", zoom, " and ", nrow(SrowCol), " tiles")
+  }
+
+    for(Drow in SrowCol$index) {
+      Dx = SrowCol[Drow, 'col']
+      Dy = SrowCol[Drow, 'row']
+      Dcell = SrowCol[Drow, 'cell']      
+      Dcache = SrowCol[Drow, 'cache']
+      Dfile = SrowCol[Drow, 'file']
+      Durl = SrowCol[Drow, 'url']
+
+
+      # extent of the cell
+      Dextent = terra::ext(rep(terra::xyFromCell(rasterSphere, Dcell), each=2) + rep(terra::res(rasterSphere), each=2)*c(-1,1,-1,1)/2)
+      
+      
+
       dirCreateMapmisc(path=Dcache,recursive=TRUE,showWarnings=FALSE)
-      Dfile = file.path(Dcache, Dtile)
       
       
       Dsize = file.info(Dfile)['size']
@@ -186,98 +223,193 @@ getTilesMerc = function(
         if(verbose) cat("tile ", Dfile, " cached\n")
       }
       
-      thisimage = try(raster::brick(Dfile), silent=TRUE)
+      thisimage = try(suppressWarnings(terra::rast(Dfile)), silent=TRUE)
       
       if(any(class(thisimage)=='try-error')) {
         if(verbose) warning("tile ", Dfile, " cannot be loaded")
         
-        thisimage = raster(
+        thisimage = terra::rast(
           Dextent, nrows=256, ncols=256, crs=crsMerc
         )
-        values(thisimage) = NA
+        terra::values(thisimage) = NA
       } else {
-        crs(thisimage) = crsMerc
-        extent(thisimage) = Dextent
+        terra::crs(thisimage) = crsMerc
+        terra::ext(thisimage) = Dextent
       }
-      
-      if(nlayers(thisimage)==1) {
-        # single layer, there's a colortable
-        newcolours = thisimage@legend@colortable
-        thisimage=thisimage[[1]]
-        if(length(newcolours)) {
-          if(any(is.na(values(thisimage)))) {
-            newcolours[1] = NA
-          }
-          thisimage = thisimage + length(colourtable)
-          colourtable = c(colourtable, newcolours)
-          thisimage@legend@colortable = colourtable
-        }
-        names(thisimage) = gsub("^http://|/$", "", path)
-      } else if (nlayers(thisimage)>1){
-        
-        # if values are 1 to 256, change to 0 to 255
-        if(max(maxValue(thisimage))==256 ) {
-          thisimage = thisimage - 1
-        }
-        
-        cnames = c('Red','Green','Blue','Trans')[1:min(c(4,nlayers(thisimage)))]
-        
-        names(thisimage)[1:length(cnames)] = paste(
-          gsub("^http://|/$", "", path),
-          cnames,
-          sep="")
-        
-        transLayer = grep("Trans$", names(thisimage), value=TRUE)
-        colLayer = grep("Trans$", names(thisimage), value=TRUE,invert=TRUE)
-        if(length(transLayer)) {
-          # convert transparent to NA
-          transLayer = reclassify(thisimage[[transLayer]], data.frame(-Inf, 10, NA))
-          thisimage = raster::mask(thisimage, transLayer)
-        }
-      } # end more than one layer 
-      
-      rasterCol[[paste('y', Dy,sep='')]] = thisimage
-    } # end Dy
-    
-    if(length(rasterCol)> 1) {
-      names(rasterCol)[1:2] = c('x','y')
-      rasters[[paste('x',Dx,sep='')]] = do.call(
-        raster::merge, rasterCol
-      )
-      names(rasters[[paste('x',Dx,sep='')]]) = 
-        names( rasterCol[[1]])
-    } else {
-      rasters[[paste('x',Dx,sep='')]] = rasterCol[[1]]
+
+      rasters[[Drow]] = thisimage
+    } # end Drow
+
+#    map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
+
+#    map.new(worldMap);plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
+
+    colourTableList = lapply(rasters, terra::coltab)
+    for(D in 1:length(colourTableList)) {
+      colourTableList[[D]] = as.data.frame(colourTableList[[D]][[1]])
+      if(nrow(colourTableList[[D]])) colourTableList[[D]]$tile = D
     }
-  } # end Dx
-  
-  # merge the rows
-  if(length(rasters) > 1) {
-    thenames = names(rasters[[1]])
-    
-    names(rasters)[1:2] = c('x','y')
-    rastersMerged = do.call(
-      raster::merge, rasters
-    )
-    names(rastersMerged) = names(rasters[[1]])
-  } else {
-    rastersMerged = rasters[[1]]
+    colourtable = do.call(rbind, colourTableList)
+
+
+
+    if(nrow(colourtable)) {
+      theDup = duplicated(colourtable[,c('red','green','blue','alpha')])
+      names(colourtable) = gsub("^value$", "value.old", names(colourtable))
+      colourtable = cbind(colourtable, value = NA)
+      colourtable[!theDup, 'value'] = seq(0, len=sum(!theDup), by=1)
+
+      colourtableUnique = colourtable[!theDup, ,drop=FALSE]
+      colourtableDup = colourtable[theDup, setdiff(names(colourtable), c('value')),drop=FALSE]
+      colourtableMerge = merge(colourtableDup, colourtableUnique[, setdiff(names(colourtableUnique), c('tile','value.old','row')),drop=FALSE], 
+        by = c('red','green','blue','alpha'), suffixes = c('.old','.new'))
+
+      colourtableAll = rbind(colourtableUnique[names(colourtable)], colourtableMerge[,names(colourtable)])
+      Stiles = sort(unique(colourtableAll$tile))
+
+      colourtableFinal = colourtableUnique[order(colourtableUnique$value),c('value','red','green','blue','alpha')]
+
+#      xx = rasters
+      for(Dtile in Stiles) {
+        toSub = colourtableAll[colourtableAll$tile == Dtile, ,drop=FALSE]
+        rasters[[Dtile]] = terra::subst(rasters[[Dtile]], from=toSub[,'value.old'], to=toSub[,'value'])
+        terra::coltab(rasters[[Dtile]]) = colourtableFinal
+      }
+    }  else {# if have colourtable
+
+      colourtableFinal = NULL
+    }
+    # merge columns into blocks
+
+    SrowCol$newBlock = c(TRUE, !(diff(SrowCol$col)==0 & diff(SrowCol$row)==1))
+    SrowCol$block = cumsum(SrowCol$newBlock)
+
+    rastersMerged = list()
+    for(Dblock in unique(SrowCol$block)) {
+      blockHere = SrowCol[SrowCol$block == Dblock, ,drop=FALSE]
+      toMerge = rasters[blockHere$index]
+      if(length(toMerge) > 1) {
+        names(toMerge)[1:2] = c('x', 'y')
+        rastersMerged[[Dblock]] = do.call(terra::merge, toMerge)
+      } else {
+        rastersMerged[[Dblock]] = rasters[[blockHere$index]]
+      }
+#      plot(rastersMerged[[Dblock]], add=TRUE)
+    }
+#   map.new(worldMap);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
+    # merge rows if possible
+    Nblocks = length(rastersMerged)
+    if(Nblocks > 1) {
+    toMerge = matrix(FALSE, Nblocks, Nblocks)
+    for(DblockCol in seq(from=1,by=1, length=Nblocks-1)) { # won't do if Nblocks=1
+      for(DblockRow in seq(DblockCol+1, Nblocks)) {
+        bmat1 = SrowCol[SrowCol$block == DblockCol, ]
+        bmat2 = SrowCol[SrowCol$block == DblockRow, ]
+        if(nrow(bmat1) == nrow(bmat2))
+          toMerge[DblockRow, DblockCol] = all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
+      }
+    }
+
+   
+    toMerge = toMerge + t(toMerge)
+    toMerge = toMerge >= 1
+    blockToMerge = blockToMergeOrig = which.max(apply(toMerge, 2, sum))
+    for(D in seq(1, nrow(toMerge)^2)) {
+      blockToMerge = unique(c(blockToMerge, unlist(apply(toMerge[, blockToMerge,drop=FALSE], 2, which))))
+    }
+    blockToMerge = sort(blockToMerge)
+    blockToMergeOrig = min(blockToMerge)
+
+    if(length(blockToMerge)>1) {
+      rastersMerged[[blockToMergeOrig]] = do.call(terra::merge, rastersMerged[blockToMerge])
+    }
+#    rastersMerged = rastersMerged[sort(unique(c(blockToMergeOrig, setdiff(1:length(rastersMerged), blockToMerge))))]
+    SrowCol[SrowCol$block %in% blockToMerge, 'block'] = blockToMergeOrig
+    } # more than one block
+
+
+    if(identical(crs(rastersMerged[[1]]), crs(outraster)) & (length(rastersMerged)==1) ) {
+        outraster = rastersMerged[[1]]
+    } else { # need to reproject
+
+
+    # fill in values of the cells for output raster
+    if(verbose) cat('reprojecting\n')
+    terra::nlyr(outraster) = terra::nlyr(rastersMerged[[1]])
+    terra::values(outraster) = NA
+    xSeq = terra::xFromCol(outraster)
+    SrowColSub = SrowCol[,c('row','col','cell','index','block'),drop=FALSE]
+
+    SoutRows = unique(c(seq(1, terra::nrow(outraster), by=NrowsPerCycle), terra::nrow(outraster)+1))
+    SoutCells = terra::cellFromRowCol(outraster, SoutRows, 1)
+    SoutCells[length(SoutCells)] = terra::ncell(outraster)+1
+
+    if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
+
+#    terra::values(rasterSphere) = 1:terra::ncell(rasterSphere)
+    for(Dcycle in seq(1,length(SoutRows)-1) ) {
+      if(verbose) cat(Dcycle, ' ')
+
+      ScellOut = seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1)
+      thisRow = terra::project(
+        vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
+        crsMerc, partial=TRUE)
+      thisRowGeom = terra::geom(thisRow)[,c('x','y')]
+#      isIn = relate(thisRow, ext(rasterSphere), 'within')
+
+        theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
+#        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
+
+      SrowColHere = cbind(
+        indexOut = 1:length(ScellOut),
+        ScellOut = ScellOut,
+        cell = theCell)
+
+      SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
+      SrowColHere = split(SrowColHere, SrowColHere$block)
+      outValuesHere = lapply(SrowColHere, function(xx) {
+            cbind(
+              ScellOut = xx[,'ScellOut', drop=FALSE], 
+              terra::extract(
+                rastersMerged[[xx[1,'block']]], 
+                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
+#            result[is.nan(result[,2]),2] = NA
+#            result
+      })
+      for(D in names(outValuesHere)[-1])
+        names(outValuesHere[[D]]) = names(outValuesHere[[1]])
+      outValuesHere = as.matrix(do.call(rbind, outValuesHere))
+      outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
+      if(terra::inMemory(outraster)) {
+        terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
+      } else {
+        terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
+      } 
+
+    }
+    if(verbose) cat(Dcycle, '\n')
+
+  } # end reproject
+
+
+  terra::coltab(outraster) = colourtableFinal
+
+
+  if(terra::nlyr(outraster)== 3) {
+    names(outraster) = c('red','green','blue')
+    terra::RGB(outraster) = 1:3
   }
-  
-  # add the colortable
-  if( length(colourtable)) {
-    # re-order colours so most common colours are first
-    newtable = unique(colourtable)
-    tomatch = match(colourtable,newtable)
-    rastersMerged@legend@colortable = newtable
-    values(rastersMerged) = tomatch[values(rastersMerged)+1]-1
+  if(terra::nlyr(outraster)== 4) {
+    names(outraster) = c('red','green','blue', 'alpha')
+    terra::RGB(outraster) = 1:4
   }
-  attributes(rastersMerged)$tiles = 
-    list(tiles = length(SrowCol[[1]])*length(SrowCol[[2]]), 
+
+  attributes(outraster)$tiles = 
+    list(tiles = nrow(SrowCol), 
       zoom=zoom,
       path=path)
   
-  return(rastersMerged)	
+  return(outraster)	
   
 }
 

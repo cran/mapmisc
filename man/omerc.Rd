@@ -10,19 +10,20 @@ for a supplied Spatial object
 \usage{
 	omerc(x, angle,  
 	post=c('none', 'north', 'wide','tall'),
-    preserve=NULL) 
+    preserve=NULL, ellipse=TRUE) 
     ocea(x, angle, flip=FALSE)
     moll(x=0, angle=NULL, flip=FALSE)
 }
 
 \arguments{
-	\item{x}{A SpatialP* object or a vector of length 2 giving the 
+	\item{x}{A \code{\link[terra]{SpatVector}} object or a vector of length 2 giving the 
 	centroid of the projection. }
 \item{angle}{angle of rotation or vector of angles}
 \item{post}{post-projection angle rotation}
 \item{flip}{post-projection flipping of coordinates}
-\item{preserve}{A \code{SpatialPoints} object, the resulting projection is scaled
+\item{preserve}{A \code{\link[terra]{SpatVector}} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
+\item{ellipse}{compute projection region and areas to crop when projecting.}
 }
 
 \details{
@@ -45,62 +46,30 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 
 \value{
-	An object of class \code{\link[sp:CRS-class]{CRS}}.
+	An object of class \code{\link[terra]{crs}}.
 }	
 
 \references{
-\url{https://en.wikipedia.org/wiki/Space-oblique_Mercator_projection/}
+\url{https://en.wikipedia.org/w/index.php?title=Space-oblique_Mercator_projection}
 }
-\seealso{\code{\link[sp]{CRS-class}},\code{\link[sp]{spTransform}}}
+
+\seealso{
+  \code{\link[terra]{crs}},
+  \code{\link[terra]{project}}
+}
 
 \examples{
 
-omerc(c(10,50), angle=c(0,45,80))
+data('worldMap')
+worldMap = terra::unwrap(worldMap)
 
-data('netherlands')
 
-if(require('rgdal', quietly=TRUE)){
-nldUtm = spTransform(nldCities,
-	omerc(nldCities, angle=0))
-projection(nldUtm)
+myProj = omerc(c(-100,-70), angle=-45)
+crs(myProj, proj=TRUE)
 
-map.new(nldUtm)
-text(nldUtm,labels=nldUtm$name)
-scaleBar(nldUtm, 'topright')
+plot(project(worldMap, crsLL))
+plot(attributes(myProj)$crop, col='red', add=TRUE)
 
-nldRot = spTransform(nldCities,
-omerc(nldCities, angle=seq(25,45,by=5))
-)
-projection(nldRot)
 
-map.new(nldRot)
-text(nldRot,labels=nldRot$name)
-scaleBar(nldRot, 'topright')
-insetMap(nldRot, 'bottomright',map=world)
-
-}
-\dontrun{
-
-	nldOceaCrs = ocea(nldCities)
-	nldOcea = spTransform(nldCities, nldOceaCrs)
-	map.new(nldOcea, buffer=2000)
-	text(nldOcea,labels=nldOcea$name)
-	scaleBar(nldOcea, 'topright')
-
-	map.new(nldCities)
-	plot(nldTiles,add=TRUE)
-	text(nldCities,labels=nldCities$name)
-
-	tilesRot = openmap(nldRot)
-	map.new(nldRot)
-	plot(tilesRot,add=TRUE)
-	text(nldRot,labels=nldRot$name)
-	
-	tilesUtm = openmap(nldUtm)
-	map.new(nldUtm)
-	plot(tilesUtm,add=TRUE)
-	text(nldUtm,labels=nldUtm$name)
-
-}
 
 }

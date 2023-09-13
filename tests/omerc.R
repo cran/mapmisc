@@ -1,39 +1,35 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
+
 library('mapmisc')
 data('netherlands')
 
+nldCities = unwrap(nldCities)
 
-if(require('rgdal', quietly=TRUE)) {
+
 x=nldCities
-xbox = as(extent(nldCities), 'SpatialPolygons')
-xbox@proj4string= nldCities@proj4string
+xbox = as.polygons(ext(nldCities), crs = crs(nldCities))
 
 bob=function(angle, ...){
-  y = spTransform(x, omerc(x, angle, ...))
-  nld2 = spTransform(xbox, y@proj4string)
+  y = project(x, omerc(x, angle, ellipse=FALSE, ...))
+  nld2 = project(xbox, crs(y))
   map.new(nld2)
   abline(v=0, col='grey')
   abline(h=0, col='grey')
   plot(nld2,add=TRUE, lwd=2, lty=3)
-  plot(extent(y), add=TRUE, col='orange')
+  plot(ext(y), add=TRUE, col='orange')
   plot(y,cex=0.2, col='red',add=TRUE)
   text(y,labels=y$name, cex=0.5, col=col2html('blue',0.4))
    mtext(paste(angle,collapse=' '),side=3,outer=FALSE,line=-1)
-   mtext(paste(strwrap(projection(y),50), collapse='\n'),side=1,
-       outer=FALSE,line=-2, cex=0.6)
    scaleBar(y,'topright')
-   return(invisible(y@proj4string))
+   return(invisible(crs(y)))
   
  }
 
 
-}
 
-if(!interactive())
-  pdf("omerc.pdf")
+if(!interactive()) pdf("omerc.pdf")
 
   par(mfrow=c(3,3))
-  if(require('rgdal', quietly=TRUE)) {
+
 
   	bob(0)
   
@@ -51,13 +47,11 @@ if(!interactive())
   bob(45, post='north')
   bob(45, post='wide')
   bob(45, post='tall')
-}
   
   
 
 
 par(mfrow=c(3,2))
-  if(require('rgdal', quietly=TRUE)) {
   bob((-10):10)
   
   bob(seq(-170,-190))
@@ -67,21 +61,18 @@ par(mfrow=c(3,2))
   bob((-10):10, post='long')
   
   bob((-10):10, post=90)
-}
 
 N = 12
-somePoints = SpatialPointsDataFrame(
+somePoints = vect(
     cbind(runif(N,-5,40), runif(N,40,70)),
-    data=data.frame(name=1:N),
-    proj4string=mapmisc::crsLL
+    atts=data.frame(name=1:N),
+    crs=crsLL
     )
     x=somePoints
-    xbox = as(extent(somePoints), 'SpatialPolygons')
-    xbox@proj4string = x@proj4string
+    xbox = as.polygons(ext(somePoints), crs(somePoints))
  
   par(mfrow=c(3,2))
   
-  if(require('rgdal', quietly=TRUE)) {
   
   bob((-10):10, preserve=x, post=10)
   bob((-10):10, preserve=x, post='none')
@@ -95,7 +86,6 @@ somePoints = SpatialPointsDataFrame(
   
   scaleBar(bob((-10):10, preserve=x, post='wide'), c(0,0), seg.len=0)
   
-}
 
 if(!interactive())   dev.off()
 

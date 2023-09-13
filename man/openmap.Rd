@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	  path="http://tile.openstreetmap.org/",
 	  maxTiles = 9, 
-	  crs=raster::crs(x),   
+	  crs=terra::crs(x),   
 	  buffer=0, fact=1, 
 	 verbose=getOption('mapmiscVerbose'),
 	  cachePath=getOption('mapmiscCachePath')
@@ -25,8 +25,8 @@ Downloads map tiles from Openstreetmap.org and other servers.
 
 \arguments{
 	\item{x}{
-	An \code{\link[raster]{extent}} or any spatial object (raster, Spatial*)
-	from which an extent can be obtained.  }
+	An a spatial object  
+	from which an extent and crs can be obtained.  }
 \item{zoom	}{
 the zoom level, when missing it will be determined by maxTiles.}
 \item{path}{	
@@ -41,9 +41,8 @@ for instance when \code{x} is a matrix or extent,
 \item{buffer}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
-\item{fact}{Passed to \code{\link[raster]{disaggregate}} before 
-	reprojecting if \code{fact>1}, 
-	helps to produce a clearer image.}
+\item{fact}{Passed to increase or decrease resolution, values above 1
+	help to produce a clearer image.}
   \item{verbose}{
     Print information about map images being downloaded, defaults to \code{FALSE}.
   }
@@ -77,9 +76,7 @@ Be sure to attribute any maps you publish, the \code{osmAttribution} function wi
 
 
 \value{
-	\code{openmap} returns a \code{Raster} with indexed colours,
-	 or a \code{RasterBrick} 
-	\code{\link[raster]{brick}}, with 'red', 'green' and 'blue' layers.
+	\code{openmap} returns a \code{SpatRaster} with indexed colours or RGB layers.
 	
 	\code{openmapAttribution} returns a character string.
 	 
@@ -90,7 +87,7 @@ Be sure to attribute any maps you publish, the \code{osmAttribution} function wi
 \examples{
 
 data("netherlands")
-
+nldTiles = terra::unwrap(nldTiles)
 plot(nldTiles)
 
 openmapAttribution(nldTiles, short=TRUE, type='markdown')
@@ -98,30 +95,29 @@ openmapAttribution(nldTiles, short=TRUE, type='markdown')
 openmapAttribution("stamen-toner", type='text')
 
 
-myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
-  crs=mapmisc::crsLL)
+myraster = rast(matrix(1:100,10,10),extent=ext(8, 18, 0, 10), crs=crsLL)
 
-values(myraster) = seq(0,1,len=ncell(myraster))
-
-myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
-	seq(1,ncell(myraster),len=5)]
+myPoints = as.points(myraster)[seq(1, ncell(myraster), len=12)]
 
 names(osmTiles())
 
 
-\dontrun{
-	mytiles = openmap(myraster, zoom=6)
+	mytiles = try(openmap(myraster, zoom=5, verbose=TRUE))
 
-	map.new(myraster)
+oldpar =	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
-	mytiles = openmap(myPoints,
-		path='waze', verbose=TRUE)
+	myPoints = project(myPoints, crsMerc)
+	x = myPoints;path='waze'
+	mytiles = try(openmap(myPoints,
+		path='waze', verbose=TRUE, buffer=5))
 	map.new(myPoints)
-	plotRGB(mytiles, add=TRUE)
+	plot(mytiles, add=TRUE)
 	points(myPoints, col='red')
 	openmapAttribution(mytiles)
-}
+
+par(oldpar)
+
 
 }

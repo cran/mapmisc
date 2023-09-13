@@ -1,12 +1,11 @@
-
 breaksForRates = function(
     x,
     breaks = 10,
     transform = 0.1,
     multiples = c(2, 4, 5, 10)) {
   
-  if(methods::existsMethod(raster::maxValue, class(x)))
-    x = raster::maxValue(x)
+  if(methods::existsMethod(terra::minmax, class(x)))
+    x = terra::minmax(x)[1,1]
   theMax = max(x)
   
   if(is.character(transform))

@@ -1,5 +1,5 @@
 map.new = function(x, legendRight=FALSE, buffer=0,
-                   mar=c(0,0,0,0), ...) {
+                   mar=c(0,0,0,0),  ...) {
 	
 	if(!is.null(attributes(x)$ellipse)) {
 		ellipse = x = attributes(x)$ellipse
@@ -7,14 +7,12 @@ map.new = function(x, legendRight=FALSE, buffer=0,
 		ellipse = NULL
 	}
 	
-  xpoints = as(extend(extent(x), buffer), 'SpatialPoints')
+  xpoints = terra::vect(
+  	terra::crds(terra::vect(terra::extend(
+  	terra::ext(x), buffer))), 
+  crs=terra::crs(x))
 
-	thecrs = try(crs(x), silent=TRUE) 
-	if(any(class(thecrs)!="try-error") & !is.na(thecrs)) {
-			crs(xpoints) = crs(thecrs)
-	}
   
-  oldpar = par(c('mar','xaxs','yaxs', 'bty'))
 
   if(is.logical(legendRight))
     legendRight = c(1,0.8)[1+ legendRight ]
@@ -32,21 +30,21 @@ map.new = function(x, legendRight=FALSE, buffer=0,
 		}
 	}
 	if(!length(ldots$xpd)) ldots$xpd=FALSE
-	if(!length(ldots$axes)) ldots$axes=TRUE
+	if(!length(ldots$axes)) ldots$axes=FALSE
 	if(!length(ldots$xaxs)) ldots$xaxs = 'i'
 	if(!length(ldots$yaxs)) ldots$yaxs = 'i'
 	if(!length(ldots$xaxt)) ldots$xaxt = 'n'
 	if(!length(ldots$yaxt)) ldots$yaxt = 'n'
 	
-  	do.call(par, ldots[setdiff(names(ldots),'axes')]) #(mar=mar, xaxs='i',yaxs='i',xpd=FALSE, ...)
-  
-	do.call(plot, c(list(x=xpoints,pch=NA), ldots))#, axes=TRUE, ...)
+  oldpar = par(no.readonly = TRUE) 
+
+  do.call(par, ldots[setdiff(names(ldots),'axes')]) #(mar=mar, xaxs='i',yaxs='i',xpd=FALSE, ...)
+	do.call(terra::plot, c(list(x=xpoints,pch=NA), ldots))#, axes=TRUE, ...)
 
 	if(!is.null(ellipse)) {
 		plot(ellipse, add=TRUE, ...)
 	}
   
-
   return(invisible(oldpar))
 		
 }

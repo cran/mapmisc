@@ -1,13 +1,23 @@
 insetMap = function(crs, 
-    pos="bottomright",map="osm",zoom=0, 
+    pos="bottomright",
+    map="osm",
+    zoom=0, 
     width=max(c(0.2, 1-par('plt')[2])), 
 col="#FF000090", borderMap=NULL, 
-		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
-		outer=TRUE, ...) {
+		cropInset = terra::ext(-180,180, -47, 71),
+		outer=TRUE, inset = c(0.1, 0.1),
+		...) {
 
   
-  
-fromEdge = matrix(par("plt"), 2, 2, 
+  if(outer) {
+	oldxpd = par("xpd")
+	usr = par('usr')
+	graphics::clip(usr[1], usr[2], usr[3], usr[4])
+	oldpar = par(no.readonly = TRUE) 
+	par(xpd=NA)
+	on.exit(par(oldpar))    
+}
+fromEdge = matrix(pmax(0.01, par("plt")), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
 extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
 dimUsr = abs(apply(extentUsr, 2, diff))
@@ -17,17 +27,17 @@ dimFull = dimUsr/fracUsr
 extentFull = extentUsr
 extentFull['max',] = extentFull['min',] +
     apply(extentUsr,2,diff) / (fromEdge['max',])
-extentFull['min',] = extentFull['min',] -
-    apply(extentUsr,2,diff) *(  fromEdge['min',])/ (1 -  fromEdge['min',])
+#extentFull['min',] = extentFull['min',] -
+#    apply(extentUsr,2,diff) *(  fromEdge['min',])/ (1 -  fromEdge['min',])
 
-extentFull = extent(
+extentFull = terra::ext(
 		extentFull[1,1],
 		extentFull[2,1],
 		extentFull[1,2],
 		extentFull[2,2]
 		)
 
-extentUsr = extent(
+extentUsr = terra::ext(
 		extentUsr[1,1],
 		extentUsr[2,1],
 		extentUsr[1,2],
@@ -43,26 +53,22 @@ if(outer) {
 
 extentSmall = extentUsr
 		
-if(is.character(crs))
-			crs = CRS(crs)
-if(any(class(crs) != "CRS"))
-	crs = crs(crs)
 
-bboxSmall = t(bbox(extentSmall))
+bboxSmall = matrix(as.vector(extentSmall), 2)
 
-xseq = seq(bboxSmall[1,1], bboxSmall[2,1],len=20)
-yseq = seq(bboxSmall[1,2], bboxSmall[2,2],len=20)
+xseq = seq(extentSmall$xmin, extentSmall$xmax,len=20)
+yseq = seq(extentSmall$ymin, extentSmall$ymax,len=20)
 
 polySmall = cbind( 
-		c(xseq, rep(bboxSmall[2,1], length(yseq)), 
-				rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
-		c(rep(bboxSmall[1,2], length(xseq)), yseq,
-				rep(bboxSmall[2,2], length(xseq)), rev(yseq)
+		c(xseq, rep(extentSmall$xmax, length(yseq)), 
+				rev(xseq), rep(extentSmall$xmin, length(yseq))), 
+		c(rep(extentSmall$ymin, length(xseq)), yseq,
+				rep(extentSmall$ymax, length(xseq)), rev(yseq)
 		)
 )
 
-
-xsp = SpatialPoints(polySmall, 	proj4string = crs)
+crs = terra::crs(crs)
+xsp = vect(polySmall, 	crs = crs)
 
 
 # if cropInset is numeric
@@ -70,122 +76,122 @@ xsp = SpatialPoints(polySmall, 	proj4string = crs)
   # and crop the inset map
 	
 if(is.numeric(cropInset)) {
-  cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
+  cropInset = rast(nrows=40, ncols=40, extent=terra::extend(extentSmall, cropInset), crs=crs)
 }
 
-if(all(class(cropInset)=='Extent')){
-	cropInset = raster(cropInset, crs=crsLL)
 	mapExtent = xsp
+
+if(all(class(cropInset)=='SpatExtent')){
+	cropInset = rast(cropInset, crs=crsLL)
+} 
+# map = 'osm'
+if(is.character(map)) {
+	cropInsetVec = terra::vect(terra::xyFromCell(cropInset, 1:terra::ncell(cropInset)), crs=crs(cropInset))
+	forMap = terra::union(project(mapExtent, crsMerc), project(cropInsetVec, crsMerc))
+  map = openmap(x=forMap, path=map, zoom=zoom,crs=crsMerc, verbose=TRUE)
+  mapOrig = terra::deepcopy(map)
 } else {
-	if(is.null(cropInset)) {
-		mapExtent = xsp
-	}	 else {
-		mapExtent = cropInset
-	}
+	map = terra::deepcopy(map)
+	mapOrig = terra::deepcopy(map)
 }
 
-if(is.character(map)) {
-  map = openmap(mapExtent, path=map, zoom=zoom,crs=NA)
-}
+
 # make sure map is a raster
-if(!length(grep("^Raster", class(map)))) {
+
+if(!length(grep("^SpatRaster", class(map)))) {
   warning('map is not a Raster')
 }
 
 if(!is.null(cropInset)) {
-tocrop = raster(
-  raster::union(extent(cropInset), 
-    extent(projectExtent(mapExtent, crs(cropInset)))
-  ), crs=crs(cropInset))
-tocrop = projectExtent(tocrop, crs(map))
+tocrop = terra::rast(
+  terra::union(
+  	terra::ext(cropInset), 
+    terra::ext(terra::project(terra::ext(mapExtent), terra::crs(mapExtent), terra::crs(cropInset)))
+  ), crs=terra::crs(cropInset))
+tocrop = terra::project(terra::ext(tocrop), terra::crs(tocrop), terra::crs(map))
 # if the extents are overlapping, crop
-map = crop(map, tocrop)
+map = terra::crop(map, tocrop)
+mapOrig = terra::deepcopy(map)
 }
 
 
 
+usr = par('usr')
 
+plotCellRatio = diff(usr)[-2]/par('pin')
+mapSize = diff(as.vector(terra::ext(map)))[-2]
 
-
-oldrange = apply(bbox(extentFull), 2, diff)
-oldYoverX = oldrange[2]/oldrange[1]
-
-newxrange = (xmax(extentFull)-xmin(extentFull))*width
-plotFracYcoords = oldrange['y']/oldrange['x']
-plotFracYinches= par('pin')[2]/par('pin')[1]
-    
-#plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
-
-#plotFracYinches= exp(diff(log(par('pin'))))
-
-#if(length(grep("longlat", projection(map)))) {
-#	cellRatio = res(area(map))
-#	cellRatio = cellRatio[1]/cellRatio[2]
-#} else {
-	cellRatio = 1
-#}
-
-insetMapRatio = abs(apply(bbox(map),1,diff))
-insetMapRatio = insetMapRatio[2]/insetMapRatio[1]
-  
-newyrange = newxrange * cellRatio* insetMapRatio# * plotFracYcoords / plotFracYinches 
+mapXwidth = diff(usr[1:2])*width
+mapYwidth = mapXwidth * (plotCellRatio[2]/plotCellRatio[1]) * (mapSize[2]/mapSize[1])
+mapYwidthUsr = mapXwidth  * (mapSize[2]/mapSize[1])
 
 
 if(is.character(pos)) {
-		xpoints = t(bbox(extentBig))
 
-x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
+	xpoints = matrix(as.vector(extentBig), ncol=2)
+
+	x = apply(xpoints, 2, mean) - 0.5*c(mapXwidth, mapYwidth)
+
+
+	theRange = diff(usr)[-2]
+	inset = rep(inset, 2)
 
 if(length(grep("^top",pos)))
-	x[2] = xpoints[2,2]-newyrange
+	x[2] = usr[4]-theRange[2]*inset[2] - mapYwidth
 if(length(grep("^bottom",pos)))
-	x[2] = xpoints[1,2]
+	x[2] = usr[3]+theRange[2]*inset[2]
 if(length(grep("right$",pos)))
-	x[1] = xpoints[2,1]-newxrange
+	x[1] = usr[2]-theRange[1]*inset[1] - mapXwidth
 if(length(grep("left$",pos)))
-	x[1] = xpoints[1,1]
-} else x=pos
-
-
-mapOrig = map
-extent(map)= extent(c(x[1], x[1]+newxrange, x[2],
-				x[2]+newyrange))
-crs(map) = CRS()
-bbOrig = t(bbox(extent(mapOrig)))
-bbSmall = t(bbox(extent(map)))
-
-
-if(requireNamespace('rgdal', quietly=TRUE)) {
-  xsp = spTransform(xsp,
-		CRSobj=crs(mapOrig))
+	x[1] = usr[1]+theRange[1]*inset[1]
+} else {
+	x=pos
 }
+
+
+
+
+terra::ext(map)= terra::ext(c(x[1], x[1]+mapXwidth, x[2], x[2]+mapYwidth))
+terra::crs(map) = crs
+
+bbOrig = matrix(as.vector(terra::ext(mapOrig)), 2)
+bbSmall = matrix(as.vector(terra::ext(map)), 2)
+
+
+
+xsp = terra::project(xsp, terra::crs(mapOrig))
+xsp = terra::crop(xsp, mapOrig)
 
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 
 N = length(xsp)
 
-xsp@coords = (xsp@coords - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
-		bbSmall[rep(1,N),]
+
+if(N) {
+xsp = vect(
+	(terra::crds(xsp) - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + bbSmall[rep(1,N),], 
+	crs = crs(mapOrig))
+}
 
 toScale = list(shift1 = bbOrig[1,], scale=scale, shift2 = bbSmall[1,])		
 
-xsp = raster::crop(xsp, map)
-xsp = coordinates(xsp)
+xsp = terra::crds(xsp)
 
-if(outer) {
-	oldxpd = par("xpd")
-	par(xpd=TRUE)
-}
-if(nlayers(map)>=3) {
- plotRGB(map[[1:3]], add=TRUE)
-} else {
-	plot(map, add=TRUE)
-}
+
+theCol = do.call(grDevices::rgb, 
+	c(as.list(terra::coltab(map)[[1]][,-1]), list(maxColorValue=255)))
+do.call(graphics::clip, as.list(par('usr')))
+graphics::image(terra::xFromCol(map), terra::yFromRow(map, nrow(map):1), 
+	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1],
+	useRaster=FALSE, add=TRUE, col=theCol)
+# for some reason, the code below crops the map
+#plot(map, add=TRUE)
 
 # border around the map
-bigpoly = t(bbox(map))
+bigpoly = matrix(as.vector(terra::ext(map)), ncol=2)
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
-polygon(bigpoly,border=borderMap)
+
+graphics::polygon(bigpoly,border=borderMap)
  
 delta=0.3
 theX = anX = c(-delta + delta*1i, -delta + 1i, delta+1i, delta + delta*1i)
@@ -194,15 +200,13 @@ for(D in 1:3)
 theX = theX*exp(-2*pi*1i/8)
 
 if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
-	polygon((1.5*width*dimFull[1]/20) * theX +
+	graphics::polygon((1.5*width*dimFull[1]/20) * theX +
 					mean(xsp[,1])+1i*mean(xsp[,2]), col=col, ...)
 } else {
-	polygon(xsp, col=col, border=NA, ...)
+	graphics::polygon(xsp, col=col, border=NA, ...)
 }
 
-if(outer) {
-	par(xpd=oldxpd)
-}	
+
 
 attributes(xsp)$toScale = toScale
 

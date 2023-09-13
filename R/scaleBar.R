@@ -35,10 +35,6 @@ scaleBar = function(crs,
   }
   
 
-	if(is.character(crs))
-		crs = CRS(crs)
-	if(all(class(crs) != "CRS"))
-		crs = raster::crs(crs)
 	
 
 #	dash = "\u2517\u2501\u2501\u2501\u2537\u2501\u2501\u2501\u251B"
@@ -47,26 +43,22 @@ scaleBar = function(crs,
   dashTargetWidth = strwidth('m', cex=forLegend$cex)*forLegend$seg.len
   
   
-	xpoints = t(bbox(extent(par("usr"))))
+	xpoints = matrix(par('usr'), ncol=2)
 	xcentre = apply(xpoints, 2, mean)
 
-	xpoints = SpatialPoints(
-			rbind(centre=xcentre, 
+	xpoints = vect(
+			rbind(
+				centre=xcentre, 
 				dashright = xcentre + c(dashTargetWidth,0)
-			), proj4string=crs)
+			), crs=crs(crs))
 
-	if(requireNamespace('rgdal', quietly=TRUE)) {	
-		xll = spTransform(xpoints, crsLL)
-	} else {
-		xll= xpoints
-		if(!isLonLat(crs))
-			warning('rgdal not intalled, assuming coordinates are either long-lat or metres, and north is up')
-	}
+
+		xll = terra::project(xpoints, crsLL)
 
 	
 # how long (in m) is our target dash
-	dashTargetDist = spDists(xll[c("centre","dashright"),])[1,2]*1000
-	desiredLen = strwidth("x")*forLegend$seg.len 
+	dashTargetDist = as.matrix(terra::distance(xll))[1,2]
+	desiredLen = strwidth("m")*forLegend$seg.len 
 	
 	theb = log10(dashTargetDist)
 	candidates = 10^c(floor(theb), ceiling(theb))
@@ -166,7 +158,7 @@ if(!noScale) {
 	forLegend$legend = ' '
 	forLegend$lwd=3
 
-	
+	if(par('bg')=='transparent' & !any(c('bg','bty') %in% names(forLegend))) forLegend$bty = 'n'
 	
 	thelegend = do.call(graphics::legend, forLegend)
   
@@ -179,7 +171,7 @@ if(!noScale) {
       
       
 	if(forLegend$lty)
-		text(Re(thelegend$textxy),
+		graphics::text(Re(thelegend$textxy),
         Im(thelegend$textxy),
 				label=thelegend$title,  
         pos=3, cex=title.cex,
@@ -194,36 +186,32 @@ if(!noScale) {
     thecentre =  c(thelegend$text$x + forLegend$text.width/2, thelegend$text$y)
   }
   
-  xpoints = SpatialPoints(t(thecentre),
-      proj4string=crs)
+	xpoints = vect(
+			matrix(thecentre, ncol=2), crs=crs(crs))
 
-				up = SpatialPoints(
-						matrix(coordinates(xll)["centre",]+c(0,0.1),
+
+
+
+
+				up = vect(
+						matrix(terra::crds(xpoints)+c(0,0.1),
 								ncol=2,
 								dimnames=list("up",NULL)),
-						proj4string=raster::crs(xll)
+						crs = crs(xll)
 				)
 				
+		xll = terra::project(xpoints, crsLL)
 				
-  if(requireNamespace('rgdal', quietly=TRUE)) {	
-    xll = spTransform(xpoints, crsLL)
-  } else {
-    xll= xpoints
-    if(!length(grep("longlat", raster::crs(xpoints)@projargs)))
-      warning('rgdal not intalled, assuming the plot is long-lat')
-  }
+
   xll = rbind(xll,
-      SpatialPoints(
-          xll@coords+c(0,1),
-      proj4string=raster::crs(xll))
+      vect(
+          terra::crds(xll)+c(0,1),
+      crs=crsLL)
   )
   
-  if(requireNamespace('rgdal', quietly=TRUE)) {	
-    xpoints2 = spTransform(xll, crs)
-  } else{
-    xpoints2 = xll
-  }
-  thediff=apply(coordinates(xpoints2), 2,diff)
+   xpoints2 = terra::project(xll, crs)
+
+  thediff=apply(terra::crds(xpoints2), 2,diff)
   north=atan(thediff[1]/thediff[2])+pi*(thediff[2]<0)
   
   theN = theN * exp(-1i*north)

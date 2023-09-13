@@ -73,30 +73,32 @@ include 1.0.
 breaksForRates(13.6, breaks = 7) 
 
 Npoints = 20
-myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
-	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
-	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
-	proj4string=mapmisc::crsLL)
 
-\dontrun{
-mymap = openmap(myPoints)
-}
+myPoints = vect(
+	cbind(runif(Npoints), 51+runif(Npoints)), 
+	atts=data.frame(
+		y1=c(NA, rnorm(Npoints-1)), 
+	    y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)
+	),
+	crs=crsLL)
+
+
 
 if(require('RColorBrewer', quietly=TRUE)) {
 	theCol = 'RdYlBu'
 } else {
-	theCol = heat.colors
+	theCol = grDevices::heat.colors
 }
 
 myscale = colourScale(myPoints$y1, breaks=4, col=theCol,
  style="quantile", revCol=TRUE,dec=1)
 
 
+data("netherlands")
+nldElev = terra::unwrap(nldElev)
+myscale = colourScale(nldElev, breaks=4, col=theCol, style='equal', dec=0)
 
-map.new(myPoints)
-\dontrun{
-plot(mymap,add=TRUE)
-}
+oldpar = map.new(myPoints)
 plot(myPoints, col=myscale$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale)
 
@@ -105,25 +107,19 @@ myscale2 = colourScale(myPoints$y1, breaks=8, col=rainbow, style="equal",
 opacity=0.8, dec=2, revCol=TRUE)
 
 map.new(myPoints)
-\dontrun{
-plot(mymap,add=TRUE)
-}
 plot(myPoints, col=myscale2$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale2)
 
 if(require('RColorBrewer', quietly=TRUE)) {
 	theCol = 'Set2'
 } else {
-	theCol = heat.colors
+	theCol = grDevices::heat.colors
 }
 
 myscale3 = colourScale(myPoints$y2,  breaks=3,col=theCol, style="unique",
 	opacity=c(0.1, 0.9))
 
 map.new(myPoints)
-\dontrun{
-plot(mymap,add=TRUE)
-}
 plot(myPoints, col=myscale3$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale3)
 
@@ -132,10 +128,27 @@ myscale4 = colourScale(myPoints$y3,  breaks=4, style="equal",
 	opacity=c(0.1, 0.9), transform=1.25,dec=0, firstBreak=0)
 
 map.new(myPoints)
-\dontrun{
-plot(mymap,add=TRUE)
-}
 plot(myPoints, col=myscale4$plot, pch=16,add=TRUE)
 legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
 
+
+# raster with colour table
+
+x = rast(extent=ext(0,15,0,10), res=1)
+values(x) = sample(1:4, ncell(x), replace=TRUE)
+myScale = colourScale(x, breaks=3, style='unique', col=c('red','blue','orange'))
+if(utils::packageVersion("terra") >= "1.7-40" ) {
+	terra::coltab(x) = myScale$colourtable
+	plot(x)
+} else {
+	plot(x, breaks = myScale$breaks, col=myScale$col)
 }
+legendBreaks('topright', myScale)
+
+par(oldpar)
+}
+
+
+
+
+

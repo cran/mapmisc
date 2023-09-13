@@ -1,3 +1,5 @@
+
+# https://mc.bbbike.org/mc/?num=2&mt0=mapnik&mt1=maptiler_streets
 osmTiles = function(name, xyz, suffix) {
   result = c(
     osm = "http://tile.openstreetmap.org",
@@ -5,14 +7,22 @@ osmTiles = function(name, xyz, suffix) {
     'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg/',
     'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
     'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid/',
-    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
+#    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
     "osm-transport"="http://tile2.opencyclemap.org/transport/",
+    "stamen-toner" = "https://stamen-tiles-d.a.ssl.fastly.net/toner/",
+    "stamen-watercolor" = "https://tiles.stadiamaps.com/styles/stamen_watercolor/",
+    'stamen-terrain' = 'https://stamen-tiles-c.a.ssl.fastly.net/terrain/',
     "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
-#			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
-#			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
-#      "mapquest-labels"='http://otile3.mqcdn.com/tiles/1.0.0/hyb/',
+    'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/',
+    'esri' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
+    'esri-satellite' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
+    'esri-natgeo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/',
+    'esri-overlay' = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/',
+    'esri-topo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/',
+    'komoot' = 'https://a.tile.hosted.thunderforest.com/komoot-2/',
+#    soviet = 'https://y.tile.bbbike.org/cgi-bin/tapp/tilecache.py/1.0.0/topomapper_v2/',
     'osm-cyclemap' = 'http://a.tile.opencyclemap.org/cycle/',
     'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
     'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
@@ -20,8 +30,8 @@ osmTiles = function(name, xyz, suffix) {
     'hyda' = 'http://c.tile.openstreetmap.se/hydda/full/',
     'hyda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
     'hyda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
-    "opentopomap" = "http://opentopomap.org/",
-    "maptoolkit"="http://tile2.maptoolkit.net/terrain/",
+    "opentopomap" = "https://a.tile.opentopomap.org/",
+    "maptoolkit"="https://rtc-cdn.maptoolkit.net/rtc/toursprung-terrain/",
     waze="https://worldtiles2.waze.com/tiles/",
     'waze-us'='https://livemap-tiles2.waze.com/tiles/',
     humanitarian="http://a.tile.openstreetmap.fr/hot/",
@@ -29,11 +39,11 @@ osmTiles = function(name, xyz, suffix) {
     'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
 #  historical='http://www.openhistoricalmap.org/ohm_tiles/',
     nrcan = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
     'nrcan-text' = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
     'nrcan-text-fr' = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
     spinal = 'http://c.tile.thunderforest.com/spinal-map/',
     neighbourhood = 'https://a.tile.thunderforest.com/neighbourhood/',
     pioneer = 'https://b.tile.thunderforest.com/pioneer/',
@@ -69,13 +79,6 @@ osmTiles = function(name, xyz, suffix) {
   names(toadd) = paste("osm-labels-", languages, sep="")
 #	result = c(result, toadd)
   
-  stamen = c("toner","watercolor",
-    "terrain", "terrain-labels")
-  toadd = paste("http://d.tile.stamen.com/", stamen, "/",sep="")
-  names(toadd) = paste("stamen-", stamen, sep="")
-  
-  toadd = c(toadd, 
-    "stamen-terrain-background"='http://d.b.tile.stamen.com/terrain-background')
   
   result = c(result, toadd)
   
@@ -97,19 +100,163 @@ osmTiles = function(name, xyz, suffix) {
   
 }
 
-openmap = function(x, zoom, 
+
+
+if(FALSE){
+ x = vect(as.matrix(expand.grid(seq(-5e6,-1e6,len=100), seq(-3e6,3e6,len=100))), crs='EPSG:3573')
+ xLL = project(x, crsLL)
+ zoom=4
+ theExt = ext(-6e6,6e6,-6e6,6e6)
+ xx = openmap(
+  x=rast(theExt, res = (xmax(theExt)-xmin(theExt))/1200, crs=crs('EPSG:3031')),
+  path="https://stamen-tiles-d.a.ssl.fastly.net/toner/",  
+#  path="https://tiles.stadiamaps.com/styles/stamen_watercolor/", suffix='.jpg',
+  zoom=2, verbose=TRUE, fact=2)
+
+}
+
+
+openmap = function(
+  x, 
+  zoom, 
   path="http://tile.openstreetmap.org/",
   maxTiles = 9,
-  crs=raster::crs(x),
+  crs=terra::crs(x),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath')
 ) {
-  
+
 
 
   verbose = max(c(0, verbose))
   
+
+  NtestCols = 100
+
+  
+  if(!is.null(attributes(x)$ellipse) ) {
+    # to do: check for ellipses
+    # x is a crs object
+    # get the ellipse
+    crs = x
+    toCrop = attributes(x)$ellipse
+    x = attributes(x)$ellipse
+  } else {
+    toCrop = NULL
+  }
+  
+
+  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crs)
+
+  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crs)
+
+  if(identical(crs, "")) {
+      crs=crsIn=crsOut = crsLL
+  } else {
+    crsOut=crs
+    crsIn = terra::crs(x)    
+  }
+  
+
+# get extent of output
+
+# get output raster
+  extentTestRast = terra::extend(terra::ext(x), buffer)
+  if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
+      extentTestRast = terra::extend(extentTestRast, 1e-4)
+  }
+  testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
+  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+
+  testPointsMerc = project(testPoints, crsMerc)
+  testPointsOut = terra::project(testPoints, crsOut)
+  outExtent= terra::ext(testPointsOut)
+
+# buffer
+  if(terra::is.lonlat(crsOut) & any(buffer > 90)) {
+          # assume buffer is in km
+          # transform to merc , buffer, transform back
+          outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
+          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crsMerc)
+          outPointsLL = project(outPointsMerc, crsOut)
+          outExtent = terra::ext(outPointsLL)
+
+    } else {
+          outExtent = terra::extend(outExtent, buffer)
+    }
+    if(terra::is.lonlat(crsOut)) {
+      outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
+    }
+
+  testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
+  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+  testPointsMerc = project(testPoints, crsMerc)
+
+  if(missing(zoom)) {
+
+
+    # get zoom
+
+    zoom = 0
+    Ntiles = 0
+    while(Ntiles <= maxTiles & zoom <= 18) {
+      zoom = zoom + 1
+      Ntilesm1 = Ntiles
+      Ntiles = length(unique(terra::cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
+    }
+    zoom = zoom - 1
+    if(verbose) cat("zoom is ", zoom, ", ", Ntilesm1, "tiles\n")
+  }
+
+
+
+  # create out raster
+  # find average area of pixels in downloaded tiles
+
+    mercHere = .getRasterMerc(zoom)
+   if(identical(crsOut, crsMerc)) {
+        # output crs is mercator, return tiles as-is
+        outraster = terra::crop(mercHere, testRast, snap='out')
+        outraster = terra::disagg(outraster, 256)
+
+    } else {
+    theTable = as.data.frame(table(terra::cellFromXY(mercHere, terra::crds(testPointsMerc))))
+    theTable$cell = as.numeric(as.character(theTable[,1]))
+ 
+    mercHere = terra::crop(mercHere, 
+      terra::ext(
+        rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
+        0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)
+      )
+    )
+    # each tile is 256 x 256
+    mercHere = terra::disagg(mercHere, 256)
+
+    # width of the cell with the most test points in it
+    cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5, na.rm=TRUE)
+
+
+    areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
+    if(terra::ncell(areaRast) < 1e4) {
+      toQuantile = terra::values(areaRast)
+    } else {
+      toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e4))))
+    }
+    toQuantile = toQuantile[toQuantile > 0]
+    cellWidthRast = quantile(toQuantile, prob=0.5, na.rm=TRUE)
+
+
+    areaRatio = cellWidthRast/cellWidthMerc
+
+    newNumberOfCells = fact*NtestCols*sqrt(areaRatio)
+
+    outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
+  } # end not merc
+
+# cache
+
+
   if(is.null(cachePath)) {
     cachePath = tempdir()
   }
@@ -120,241 +267,126 @@ openmap = function(x, zoom,
   alltiles = osmTiles()
   pathOrig = path
   pathisname = gsub("-", ".", pathOrig) %in% 
-    gsub("-", ".", names(alltiles))
+  gsub("-", ".", names(alltiles))
   path[pathisname] = alltiles[path[pathisname]]
   
   if(length(grep("[[:punct:]]$", path, invert=TRUE)))
     path[ grep("[[:punct:]]$", path, invert=TRUE)] =
-      paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
-        "/", sep="")
+  paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
+    "/", sep="")
   
   if(length(grep("^http[s]*://", path, invert=TRUE)))
     path[ grep("^http[s]*://", path, invert=TRUE)] = 
-      paste("http://", 
-        path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
+  paste("http://", 
+    path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
   names(path) = pathOrig
   
+
+
+
+
   
-  if(all(class(x) == 'CRS')) {
-    # x is a crs object
-    # get the ellipse
-    crs = x
-    toCrop = attributes(x)$ellipse
-    x = attributes(x)$regionLL
+  Dpath = names(path)[1]
+  Durl = path[1]
+
+  if(verbose){
+    cat(Dpath, '\n')
+    cat(Durl, '\n')
+  }
+
+  if(length(grep(
+    'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
+){
+    suffix = ''
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      '[.]arcgisonline[.]com|bbbike', Durl
+    ))) {
+    suffix='.jpg'
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      'stamen.watercolor', Durl
+    ))) {
+    suffix='.jpg'
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
+      Durl)) |
+    length(grep(
+      '&$',Durl))
+  ){
+    tileNames = 'xyz='
+    suffix = ''
   } else {
-    toCrop = NULL
+    suffix = '.png'
+    tileNames = 'zxy'
   }
-  
+
+  if(length(attributes(pathOrig)$tileNames))
+    tileNames = attributes(pathOrig)$tileNames
+  if(length(attributes(pathOrig)$suffix))
+    suffix = attributes(pathOrig)$suffix
 
 
-  crsOut=crs
 
-  crsIn = crs(x)
 
-  if(all(is.na(crsIn))) {
-    if(is.vector(x)){
-      crsIn=crsLL
-    } else{
-      crsIn = crs	
-    }
+  result = try(
+    getTiles(outraster, 
+      zoom=zoom,
+      path=Durl,
+      verbose=verbose,
+      suffix=suffix,
+      tileNames = tileNames,
+      cachePath = cachePath),
+    silent=!verbose)
+
+  # fill in poles
+  # TO DO: doesn't work with omerc
+  thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
+  thePolesTrans = project(vect(thePoles, crs=crsLL, atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)])), crs(result))
+  thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
+  names(thePolesSplit) = unlist(lapply(thePolesSplit, function(xx) xx$pole[1]))
+  theHull = suppressWarnings(lapply(thePolesSplit, terra::convHull))
+  theHull = theHull[unlist(lapply(theHull, length))>1]
+
+  # replace NA's near north pole with values nearby
+  if(!is.null(theHull$north)) {
+    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='north'], ID=FALSE)
+    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
+
+    result = terra::mask(result, theHull$north, updatevalue = (toFill), inverse=TRUE)
   }
-  
+  if(!is.null(theHull$south)) {
+    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='south'], ID=FALSE)
+    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
 
-  extMerc = .getExtent(x,crsIn, buffer, crsMerc)
-  extMerc = .cropExtent(extMerc, extentMerc)
-
-  if(missing(zoom)) {
-    zoom = 1
-    while(nTilesMerc(extMerc, zoom) <= maxTiles & zoom <= 18) {
-      zoom = zoom + 1
-    }
-    zoom = min(c(18,max(c(1, zoom-1))))
+    result= terra::mask(result, theHull$south, updatevalue = unlist(toFill), inverse=TRUE)
   }
-  if(verbose) cat("zoom is ", zoom, ", ", nTilesMerc(extMerc, zoom), "tiles\n")
-  
-  result = NULL
-  
-  for(Dpath in rev(names(path))) {
-    Durl = path[Dpath]
-    if(verbose){
-      cat(Dpath, '\n')
-      cat(Durl, '\n')
-    }
-    
-    if(length(grep(
-        'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
-      ){
-      suffix = ''
-      tileNames = 'zyx'
-    } else if(
-      length(grep(
-          '[.]arcgisonline[.]com', Durl
-        ))) {
-      suffix='.jpg'
-      tileNames = 'zyx'
-    } else if(
-      length(grep(
-          'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
-          Durl)) |
-      length(grep(
-          '&$',Durl))
-      ){
-      tileNames = 'xyz='
-      suffix = ''
-    } else {
-      suffix = '.png'
-      tileNames = 'zxy'
-    }
-    
-    if(length(attributes(pathOrig)$tileNames))
-      tileNames = attributes(pathOrig)$tileNames
-    if(length(attributes(pathOrig)$suffix))
-      suffix = attributes(pathOrig)$suffix
-    
-    
-    
-    thistile = try(
-      getTilesMerc(extMerc, zoom=zoom,
-        path=Durl,
-        verbose=verbose,
-        suffix=suffix,
-        tileNames = tileNames,
-        cachePath = cachePath),
-      silent=!verbose)
-    
-    if(any(class(thistile)=="try-error")){
-      message(paste(Durl, "not accessible"))
-      thistile=NULL
-    }	else {
-      if(length(names(thistile))) {
-        theprefix=strsplit(
-          names(thistile), 
-          "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE
-        )[[1]]
-        names(thistile) = gsub(
-          theprefix, paste(Dpath, "",sep=""), 
-          names(thistile),fixed=TRUE)		
-      }
-      
-      ctable = NULL
-      if(!is.null(thistile)) {
-        if(nlayers(thistile)==1)
-          ctable = thistile@legend@colortable
-        if(is.null(result)) {
-          result = stack(thistile)
-        } else {
-          result =  stack(result, thistile)	
-        }
-      }
-      
-      
-    } # end not try-error
-  } # end loop through path	
-  
-  
-  if(is.null(result)) {
+
+  if(any(class(result)=="try-error")){
+    message(paste(Durl, "not accessible"))
     # create an empty raster
-    result = raster(extMerc,1,1,crs=crsMerc)
-    values(result) = NA
+    result = outraster
     attributes(result)$openmap = list(
       tiles=NA,
-      message=thistile,
+      message=result,
       path=path,
+      pathOrig=pathOrig,
+      zoom=zoom
+    )
+  } else {
+    attributes(result)$openmap = list(
+      path=path,
+      pathOrig=pathOrig,
       zoom=zoom
     )
   }
-  
 
-  if(!is.na(crsOut)  ){
-    oldColorTable = list()
-    for(D in names(result))
-      oldColorTable[[D]] = result[[D]]@legend@colortable
-    
-    if(verbose) cat("reprojecting ", ncell(result), " cells...")
-    
-    # if tiles need projecting
-    if(!compareCRS(crs(result), crsOut)) {
-      
-      toRaster = projectExtent(result, crsOut)
-      
-      # see if this raster has an unnecessarily large extent
-      bboxx = try(bbox(extend(extent(x), buffer)), silent=TRUE)
-      
-      # check for bboxx a single point
-      if(any(apply(bboxx,1,diff)<.Machine$double.eps)) {
-        class(bboxx) = 'try-error'
-      }
-      
-      projx = try(raster::crs(x), silent=TRUE)
-      if(any(class(bboxx)!="try-error") &  any(class(projx) != 'try-error')){
-        if(identical(projx, crsOut)) {
-          bigExtent =  extend(
-            extent(x), buffer + abs(as.numeric(apply(bboxx, 1, diff))/2))
-          toRaster = raster::crop(toRaster, bigExtent)
-        }
-      }
-      if(any(fact > 1)){
-        res(toRaster) = res(toRaster) / rep_len(fact,2)
-      }
-      
-      resultProj1 = suppressWarnings(
-        projectRaster(result, toRaster, method="ngb")
-      )
 
-      resultProj = stack(resultProj1)
-      
-      for(D in names(resultProj)) {
-        if(length(oldColorTable[[D]]))
-          resultProj[[D]]@legend@colortable = oldColorTable[[D]]
-      }
-      
-      
-      if(verbose) cat("done\n")
-    } else { # crsOut and projection(result) are the same
-      if(any(fact < 1)) {
-        # aggregate the raster
-        fact = pmax(1,round(1/fact))
-        if(any(fact > 1)) {
-          if(verbose) cat("aggregating tiles by ", fact,  "\n")
-          resultProj = stack(aggregate(result, fact=fact, fun=min))
-          for(D in names(resultProj)) resultProj[[D]]@legend = result[[D]]@legend
-        }
-      } else {
-        if(verbose) cat("tiles arrived in the desired projection\n")
-        resultProj = stack(result)
-      }
-    }
-    
-  } else { # crsOut is NA, don't project
-    resultProj = stack(result)
-  }
-  
-  
-  for(D in names(resultProj)) {
-    if(length(result[[D]]@legend@colortable)) {
-      if(verbose) cat("copying colortable for ", D, "\n")
-      resultProj[[D]]@legend@colortable =
-        result[[D]]@legend@colortable
-      if(
-        any(values(resultProj[[D]])==0, na.rm=TRUE) | 
-        any(is.na(values(resultProj[[D]])))
-        ) {
-        # set NA's to transparent
-        resultProj[[D]]@legend@colortable =
-          c('#FFFFFF00',
-            resultProj[[D]]@legend@colortable 
-          )
-        values(resultProj[[D]]) = 1+values(resultProj[[D]])
-      } # end zeros
-    } # end have colortable
-  } # end D in names(resultProj)
-  
-  if(nlayers(resultProj)==1) 
-    resultProj = resultProj[[1]]
-  
-  attributes(resultProj)$tiles = attributes(thistile)$tiles
-  attributes(resultProj)$tiles$path = path
-  
-  resultProj
+
+  result
 }
 

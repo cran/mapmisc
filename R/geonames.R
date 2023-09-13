@@ -28,10 +28,10 @@ GNcities = function(north, east, south, west, lang = "en",
   if(!fourCoords) {
     extLL = .getExtent(north, extend=buffer, crsOut = crsLL)
     
-    east = xmax(extLL)
-    west = xmin(extLL)
-    south = ymin(extLL)
-    north= ymax(extLL)
+    east = terra::xmax(extLL)
+    west = terra::xmin(extLL)
+    south = terra::ymin(extLL)
+    north= terra::ymax(extLL)
     
   }
   
@@ -58,15 +58,14 @@ GNcities = function(north, east, south, west, lang = "en",
     warning("install the geonames package to use GNcities")
     result = NULL
   }
-  result = SpatialPointsDataFrame(cbind(
+  result = vect(cbind(
       as.numeric(result[,'lng']),
       as.numeric(result[,'lat'])
-    ), data=result, 
-    proj4string=mapmisc::crsLL)
+    ), atts=result, 
+    crs=crsLL)
   
   if(is.na(theproj)) {
-    if(requireNamespace('rgdal', quietly=TRUE ))
-      result = spTransform(result, CRSobj=CRS(theproj))
+      result = project(result, crs(theproj))
   }
   
   result
@@ -101,12 +100,12 @@ GNsearch = function(..., crs=crsLL) {
       
       result$population = as.numeric(result$population)
       
-      result = SpatialPointsDataFrame(
+      result = vect(
         coords,
-        data=result, 
-        proj4string=crsLL)
-      if(requireNamespace('rgdal', quietly=TRUE ))
-        result = spTransform(result, CRSobj=crs(crs))
+        atts=result, 
+        crs=crsLL)
+
+        result = project(result, crs(crs))
     }
     
   } else {
@@ -148,9 +147,8 @@ geocode = function(x,
   xDf = data.frame(
   orig = x, 
   url=paste0(
-    'https://nominatim.openstreetmap.org/search/',
-    gsub("[[:space:]]+", "%20", x),  
-    '?format=geojson&limit=5&namedetails=1'),
+    'https://nominatim.openstreetmap.org/search?q=',
+    gsub("[[:space:]]+", "%20", x), '&format=geojson&limit=5&namedetails=1'),
   file = file.path(cachePath, make.names(x)),
   stringsAsFactors=FALSE
   )
@@ -170,17 +168,14 @@ geocode = function(x,
       downloadFileMapmisc(url = xDf[D,'url'], destfile = xDf[D,'file'],
         quiet=!verbose)
     }
-    x3[[D]] = rgdal::readOGR(
-        dsn = cacheFile,
-        verbose=verbose, 
-        stringsAsFactors=FALSE)
+    x3[[D]] = vect(cacheFile)
 
     # there might be more than one result
     # get rid of ways
     isNotWay = !x3[[D]]$osm_type == 'way'
     if(any(isNotWay)) {
         x3[[D]] = x3[[D]][isNotWay,]
-      }
+    }
 
 
     # keep only places (not river, etc) if there are places
@@ -220,9 +215,9 @@ x4$name[is.na(x4$name)] = gsub(", .*", "", x4$display_name[is.na(x4$name)])
 firstCols = c('name','orig','type','category','importance')
 omitCols = c('namedetails','icon')
 
-x4@data = cbind(
-  x4@data[,intersect(firstCols, names(x4))],
-  x4@data[,setdiff(names(x4), c(omitCols, firstCols))]
+terra::values(x4) = cbind(
+  terra::values(x4)[,intersect(firstCols, names(x4))],
+  terra::values(x4)[,setdiff(names(x4), c(omitCols, firstCols))]
   )
 
 x4
@@ -283,10 +278,10 @@ geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
     result$name = gsub(", [[:print:]]+$", "", 
       as.character(result$interpretedPlace))
     resultCoords = as.matrix(result[,c('longitude','latitude')])
-    result = SpatialPointsDataFrame(
+    result = vect(
       resultCoords,
-      data = result,
-      proj4string = mapmisc::crsLL
+      atts = result,
+      crs = crsLL
     )
   }
   result

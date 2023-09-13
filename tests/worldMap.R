@@ -1,51 +1,47 @@
 #+ setup
-options("rgdal_show_exportToProj4_warnings"="none") 
+
 library('mapmisc')
 
-if(!exists('mapmiscCachePath'))
-  mapmiscCachePath = system.file('extdata', package='mapmisc')
+#if(!exists('mapmiscCachePath'))
+#  mapmiscCachePath = system.file('extdata', package='mapmisc')
 
-if(!exists('mapmiscCacheReadOnly'))
-  mapmiscCacheReadOnly = TRUE
+#if(!exists('mapmiscCacheReadOnly'))
+#  mapmiscCacheReadOnly = TRUE
 
-mapmiscCachePath
+#mapmiscCachePath
 
-options(
-  mapmiscCachePath = mapmiscCachePath,
-  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
-  mapmiscVerbose=TRUE)
+#options(
+#  mapmiscCachePath = mapmiscCachePath,
+#  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
+#  mapmiscVerbose=TRUE)
 
-getOption("mapmiscCachePath")
-getOption("mapmiscCacheReadOnly")
+#getOption("mapmiscCachePath")
+#getOption("mapmiscCacheReadOnly")
 #'
 
-
 #+ themaps, fig.cap='some maps', fig.subcap = c('projectable region', 'projected, with bg','projected, with world countries','projectable madagascar','madagascar')
-Spackages = c('rgdal', 'rgeos', 'geosphere')
 
-#if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
-#	library('rgdal')
 
 		data("worldMap")
+		worldMap = unwrap(worldMap)
 
-		world = spTransform(worldMap, crsLL)
+		world = project(worldMap, crsLL)
 		country='Japan'
-		Dcountry = grep(country, world$NAME)
-		x=world[Dcountry,]
+		x=world[grep(country, world$NAME)]
 
 		myCrsO = moll(x)
+if(!interactive()) pdf("worldMap.pdf")
 
- plot(world)
- plot(attributes(myCrsO)$regionLL, 
+ plot(world, ylim = 90.5*c(-1,1))
+ plot(attributes(myCrsO)$crop, 
  	border='red', col='#0000FF10', add=TRUE)
-#}
 
 
-if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
 
- myMap = openmap(myCrsO, zoom=1, fact=2)
+ myMap = openmap(myCrsO, zoom=1, fact=0.7)
  map.new(myMap)
  plot(myMap, add=TRUE)
+ plot(attributes(myCrsO)$ellipse, add=TRUE, border='black')
  gridlinesWrap(myCrsO, lty=2, col='orange')
 
  xTcrop = wrapPoly(x=world, crs=myCrsO)
@@ -58,22 +54,22 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop[DcountryT,], col='red', lty=0, add=TRUE)
 	
 	gridlinesWrap(myCrsO, lty=2, col='orange')
-	
-}
-if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
+
 
  country='Madagascar'
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x, flip= 'nwu' )
-	
-	plot(attributes(myCrsMoll)$ellipse)
+	myCrsMoll = moll(x)
 	
 	plot(world)
 	plot(attributes(myCrsMoll)$crop, border='red', col='#0000FF10', add=TRUE)
-	
+
+
 	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
+	plot(attributes(myCrsMoll)$ellipse, col='lightBlue')
+	plot(xTcrop, add=TRUE, col='white')	
+
 	DcountryT  = grep(country, xTcrop$NAME)
 	
 	map.new(xTcrop)
@@ -81,33 +77,32 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop,add=TRUE, col='grey')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
-	gridlinesWrap(crs=xTcrop, lty=2, col='red')
+	gridlinesWrap(crs=myCrsMoll, lty=2, col='red')
 
-}
-if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
-	
+
 	
 	country='Iceland'
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x,  flip= 'nwu' )
+	myCrsMoll = moll(x,  angle=10)
+	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
 	
-	plot(attributes(myCrsMoll)$ellipse)
+	plot(attributes(myCrsMoll)$ellipse, col='lightBlue')
+	plot(xTcrop, add=TRUE, col='white')
 	
 	plot(world)
 	plot(attributes(myCrsMoll)$crop, border='red', col='#0000FF10', add=TRUE)
 	
-	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
-	map.new(xTcrop)
-	plot(attributes(myCrsMoll)$ellipse, add=TRUE, col='lightBlue', border='blue')
+	map.new(myCrsMoll, col='lightBlue')
 	plot(xTcrop,add=TRUE, col='grey')
+	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
-	gridlinesWrap(crs=xTcrop, lty=2, col='red')
+	if(!interactive()) dev.off()
 	
-	
-}
 #'
+
+

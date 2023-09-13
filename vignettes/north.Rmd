@@ -8,28 +8,21 @@ title: Mapping Hans Island
 ---
 
 
-This document will be incomplete if `rgdal` is unavailable or there is on
-internet connection when this document is compiled.  The full document is at
-[diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
-
 
 
 ```{r setup, include=FALSE}
-options("rgdal_show_exportToProj4_warnings"="none") 
 library('mapmisc')
-library('knitr')
-haveRgdal = require('rgdal', quietly=TRUE)
 
 if(!exists('mapmiscCachePath'))
-  mapmiscCachePath = system.file('extdata', package='mapmisc')
+  mapmiscCachePath = tempdir()
 
 if(!exists('mapmiscCacheReadOnly'))
-  mapmiscCacheReadOnly = TRUE
+  mapmiscCacheReadOnly = FALSE
 
 if(!exists('fact'))
-  fact = 0.6
+  fact = 1
 # uncomment for nicer images
-# fact = 1 
+# fact = 2 
 
 if(!exists('testing'))
   testing=FALSE
@@ -39,7 +32,7 @@ options(
   mapmiscCacheReadOnly = mapmiscCacheReadOnly
   )
 
-opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
+knitr::opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
 ```{r mapmiscCache, purl=FALSE}
@@ -57,223 +50,260 @@ coords = rbind(Alert = c(-62.338889, 82.501389),
   'Alex Fjord' = c(-75.999722, 78.9),
   'Hans island' = c(-66.459722, 80.828056)
 )
-
-x = SpatialPointsDataFrame(
-  coords, 
-  data=data.frame(name=rownames(coords)),
-  proj4string=crsLL
-)
+x = vect(coords, 
+  atts=data.frame(name=rownames(coords)),
+  crs=crsLL)
+data('worldMap')
+worldMap = unwrap(worldMap)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
 ```{r osm}
-if(haveRgdal & FALSE){
-  map = openmap(x, path='osm-no-labels', 
+map = openmap(x, path='osm',
     maxTiles=12, buffer=c(30,3), fact=fact)
   
-  map.new(map)
-  plot(map,add=TRUE)
-  points(x)
-  text(x, label=x$name, pos=4)
-  scaleBar(x, 'bottom')
-  scaleBar(x, 'left', seg.len=0, bty='n')
-}
+map.new(map)
+plot(map,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
 ```
 
 
+
+
 ```{r mapquest}
-if(haveRgdal){
   mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), fact=fact)
-  
   map.new(mapSat)
   plot(mapSat,add=TRUE)
   points(x)
   text(x, label=x$name, pos=4)
   scaleBar(x, 'bottom')
   scaleBar(x, 'left', seg.len=0, bty='n')
-}
 ```
 
-```{r mapquestDetail}
-if(haveRgdal){
+
+
+```{r satellite}
   mapSat = openmap(x=x[x$name=='Hans island',], 
-    path='opentopomap', fact=fact,  
-    buffer=c(4,1), zoom=2)
+    path='esri-satellite', fact=fact,  
+    buffer=c(8,6,1,1.5), zoom=5)
   
-  map.new(x[x$name=='Hans island',], buffer=0.3)
+  map.new(mapSat)
   plot(mapSat,add=TRUE)
-  points(x, pch=4, col='#FF000040', cex=5)
+  points(x, pch=1, col='red', cex=2)
   text(x, label=x$name, pos=4)
   scaleBar(x, 'bottomright')
-}
 ```
+
+
+
+
+
 
 
 ```{r omerc}
-if(haveRgdal){
-  xMerc = spTransform(x, omerc(x))
-  mapMerc = openmap(xMerc, path='osm-no-labels',
+  omercCrs = omerc(x)
+  xMerc = project(x, omercCrs)
+  mapMerc = openmap(xMerc, path='opentopomap',
     zoom=3, fact=fact,
-    maxTiles=12, buffer=c(50,200)*1000)
+    buffer=c(3,2)*100*1000)
   
-  map.new(xMerc, buffer=50000)
+  map.new(mapMerc)
   plot(mapMerc,add=TRUE)
   points(xMerc)
-  text(xMerc, label=xMerc$name, pos=4)
-  scaleBar(xMerc, 'bottomleft')
+  plot(wrapPoly(worldMap, omercCrs), add=TRUE)
+  text(xMerc, label=xMerc$name, pos=4, halo=TRUE)
+  scaleBar(xMerc, 'bottom', bty='n')
   scaleBar(xMerc, 'left', seg.len=0, bty='n')
-}
 ```
+
+
+
+
+
+
+
+```{r hansisland}
+map = openmap(xMerc[grep("Hans", xMerc$name),],     
+    path='opentopomap', fact=fact,
+    buffer=500, verbose=TRUE)   
+map.new(map)
+plot(map, add=TRUE)
+points(xMerc, pch=4, col='red', cex=2)
+text(xMerc, label=xMerc$name, pos=1, col='red', halo=TRUE)
+scaleBar(xMerc, 'bottomleft')
+```
+
+
+
 
 
 
 
 ```{r nrcanAlex}
-if(haveRgdal){
   map = openmap(x[x$name=='Alex Fjord',], 		
-    path='maptoolkit', zoom=3, fact=fact, 
-    buffer=c(5,5,2,1))   
+    path='opentopomap', zoom=4, fact=fact, 
+    buffer=c(5,7,2,1.5), verbose=TRUE)   
   map.new(map)
   plot(map, add=TRUE)
-  points(x, pch=4, col='red', cex=5)
-  text(x, label=x$name, pos=1, col='red')
+  points(x, pch=4, col='red', cex=2)
+  text(x, label=x$name, pos=1, col='red', halo=TRUE)
   scaleBar(x, 'bottomleft')
-}
 ```
+
+
+```{r arcticCRS}
+  crsA = crs("+init=epsg:3573")
+  theBox = llCropBox(crsA, buffer.width=100*1000,  crop.distance = 5e7, crop.poles = FALSE, crop.leftright=TRUE, remove.holes=TRUE, cycles=4)
+  attributes(crsA)[names(theBox)] = theBox
+
+  x2 = project(x, crsA)
+  map = openmap(x2,     
+    path='opentopomap', zoom=3, fact=fact, 
+    buffer=c(5,7,3,7)*100*1000)   
+  map.new(map)
+  plot(map, add=TRUE)
+  plot(wrapPoly(worldMap, crsA), add=TRUE)
+  gridlinesWrap(crsA,norths = seq(70,90,by=5), easts=0)
+  points(x2, pch=4, col='red', cex=2)
+  text(x2, label=x2$name, pos=1, col='red', halo=TRUE)
+  scaleBar(crsA, 'topleft', bty='n')
+  scaleBar(crsA, 'bottomright', bty='n')
+```
+
+
+
+
+
+
+
+
+
+
 
 # Mapping [Antipodes Island](https://en.wikipedia.org/wiki/Antipodes_Islands)
 
 Check to see that Mount Waterhouse and a rocky island are correctly positioned
 
 ```{r southData}
-
-waterhouseLL = SpatialPoints(
+waterhouseLL = vect(
   cbind(x=178.7729285, y=-49.6941201), 
-  proj4string=crsLL
-)
+  crs=crsLL)
 
-rockLL = SpatialPoints(
-  cbind(x=178.80112, y=-49.69171), 
-  proj4string=crsLL
-)
+rockLL = vect(
+  cbind(x=178.78542, y=-49.70003), 
+  crs=crsLL)
 
 
-if(haveRgdal) {
-  waterhouseMerc <- spTransform(waterhouseLL, crsMerc)
+
+waterhouseMerc <- project(waterhouseLL, crsMerc)
   
   
-  rockMerc = spTransform(rockLL, crsMerc)
-}
+rockMerc = project(rockLL, crsMerc)
 ```
 
-```{r southDataNoRgdal, include=FALSE}
-#dput(rockMerc, file='')
-#dput(waterhouseMerc, file='')
-  
-if(!haveRgdal) {
-  
-  waterhouseMerc = new("SpatialPoints"
-    , coords = structure(c(19900911.3682423, -6393470.38497316), .Dim = 1:2, .Dimnames = list(
-        NULL, c("x", "y")))
-    , bbox = structure(c(19900911.3682423, -6393470.38497316, 19900911.3682423, 
-        -6393470.38497316), .Dim = c(2L, 2L), .Dimnames = list(c("x", 
-          "y"), c("min", "max")))
-    , proj4string = new("CRS"
-      , projargs = "+proj=merc +ellps=sphere +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
-    )
-  )
-  
-  rockMerc = new("SpatialPoints"
-    , coords = structure(c(19904049.631667, -6393055.64126258), .Dim = 1:2, .Dimnames = list(
-        NULL, c("x", "y")))
-    , bbox = structure(c(19904049.631667, -6393055.64126258, 19904049.631667, 
-        -6393055.64126258), .Dim = c(2L, 2L), .Dimnames = list(c("x", 
-          "y"), c("min", "max")))
-    , proj4string = new("CRS"
-      , projargs = "+proj=merc +ellps=sphere +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
-    )
-  )
-}
-```
+
+
+
+
+
+
+
+
 
 ```{r southInset}
-if(haveRgdal){
-  
-  waterhouseWrap = spTransform(
-    waterhouseMerc, CRS("+proj=moll +lon_wrap=178.7729285 +lon_0=178.7729285 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs ")
-    #moll(waterhouseMerc)
-  )
-  
+  mollWaterhouse = moll(waterhouseMerc, angle=45, flip=TRUE)
+  waterhouseWrap = project(waterhouseMerc, mollWaterhouse)
   
   southInset = openmap(x=waterhouseWrap, 
-    path='osm-no-labels', fact=fact,
-    buffer=c(4,1,2,1)*1000*1000)
-  
-} else {
-  southInset = openmap(waterhouseMerc, 
-    path='osm-no-labels', fact=fact,
-    buffer=c(4,0,0,1.5)*1000*1000, 
-    crs=NA)
-}
+    path='osm', zoom = 3, fact=2,#fact, 
+    buffer=c(0.8, 0.2,0.4, 0.6)*1000*1000, verbose=TRUE)#c(4,1,2,1)*1)
 ```
+
+
+
+
+
+
+
+
+
+
 
 Red circle has radius 1km.
 
 ```{r waterhouseMerc} 
-mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA)
+mapMerc = openmap(waterhouseMerc, buffer=4000)
 
 map.new(mapMerc)
 plot(mapMerc, add=TRUE)
-points(waterhouseMerc, col='blue', cex=5)
+points(waterhouseMerc, col='blue', cex=5, pch=1)
+# fix
 insetMap(crs=mapMerc, 
   pos='bottomright', 
-  map=southInset, cropInset = NULL,
-  lty=0)
+  map=southInset, cropInset = NULL)
 #scaleBar(crs=mapMerc,  seg.len=35, pos='center')
-sRes = scaleBar(mapMerc, 'bottomleft', cex=2)
+sRes = scaleBar(mapMerc, 'bottomleft', cex=1.5, bty='n', outer=FALSE, inset=0.1)
 
-scaleCentre = SpatialPoints(
+# scale bar appears off
+scaleCentre = vect(
   cbind(Re(sRes$out$textxy), Im(sRes$out$textxy)), 
-  proj4string=crs(mapMerc))
-if(haveRgdal & require('geosphere', quietly=TRUE)){
-  scaleCentre = spTransform(
+  crs=crs(mapMerc))
+
+  scaleCentreLL = project(
     scaleCentre, 
     crsLL
   )	
-  circle = SpatialPoints(
+  circle = vect(
     geosphere::destPoint(
-      scaleCentre@coords,
+      crds(scaleCentreLL),
       seq(0,360,len=100),
       1000
     ),
-    proj4string = crsLL)
-  circle = spTransform(circle, crs(mapMerc))
+    crs = crsLL)
+  circle = project(circle, crs(mapMerc))
   points(circle, cex=0.3, col='red')
-}
 
 ```
 
-```{r rockMerc} 
 
-mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
+
+```{r rockMerc} 
+mapMercFine = openmap(rockMerc, buffer=50, crs=crsMerc,zoom=19, verbose=TRUE)
 
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
-points(rockMerc, col='blue',cex=5)
-if(haveRgdal) {
-  insetMap(crs=mapMercFine, 
+points(rockMerc, col='blue')
+insetMap(crs=mapMercFine, 
   pos='bottomright', 
-  map=southInset, 
-  lty=0)
-  scaleBar(mapMercFine, 'bottomleft')
-}
+  map=mapMerc, 
+  lty=0,cropInset=NULL)
+scaleBar(mapMercFine, 'bottomleft', inset=0.1)
 ```
 
+
+
+
+
+
 ```{r waterhouseLL}
-if(haveRgdal) {
-  
-  mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
-  
+  mapLL = openmap(waterhouseLL, buffer=0.02, fact=2)
   map.new(mapLL)
   plot(mapLL, add=TRUE, maxpixels = 10^6)
   points(waterhouseLL, pch=3, cex=5)
@@ -282,16 +312,14 @@ if(haveRgdal) {
     map=southInset, cropInset = NULL,
     lty=0)
   scaleBar(mapLL, 'bottomleft')
-}
 ```
 
+
+
 ```{r rockLL}	
-if(haveRgdal) {
-  mapLLfine = openmap(rockLL, zoom=19, fact=fact, buffer=0.0002)  
+  mapLLfine = openmap(rockLL, zoom=19, fact=2, buffer=3e-4,verbose=TRUE)  
   map.new(mapLLfine)
   plot(mapLLfine, add=TRUE)	
   points(rockLL, col='blue', pch=3, cex=5)
   scaleBar(mapLL, 'bottomleft')
-  
-}
-
+```

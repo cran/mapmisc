@@ -51,7 +51,7 @@ omercProj4string = function(
 
   
   if(crs) {
-    result = lapply(result, CRS)
+    result = lapply(result, crs)
   }
   
   result
@@ -60,9 +60,11 @@ omercProj4string = function(
 omerc = function(
     x, angle=0, 
     post=c('none', 'north', 'wide','tall'),
-    preserve=NULL
+    preserve=NULL,
+    ellipse=TRUE
 ) {
   
+
   digits=3
   angleOrig = angle
   post = post[1]
@@ -94,11 +96,12 @@ omerc = function(
   # create the centre point
   if(!is.numeric(x)){
     # centre of the bounding box
-    theCentre = bbox(x)
-    theCentre = theCentre[,'min'] +
-        apply(theCentre, 1, diff)/2
+    theCentre = terra::ext(x)
+    theCentre = c(terra::xmin(theCentre), terra::ymin(theCentre)) +
+        diff(as.vector(theCentre))[-2]/2
   } else {
     theCentre = x[1:2]
+    x = vect(matrix(x, ncol=2), crs=crsLL)
     # use preserve for finding best bounding box
     if(!is.null(preserve)){
       x = preserve
@@ -110,36 +113,19 @@ omerc = function(
   }
   theCentre = round(theCentre, digits)
   
-  haveRgdal = requireNamespace('rgdal', quietly=TRUE)
-
-  if(!haveRgdal) {
-  # no rgdal, make projections and return them
-    rotatedCRS = 
-      omercProj4string(
-          lon=theCentre[1],
-          lat=theCentre[2], 
-          angle=angle,
-          inverseAngle = inverseAngle)
-    if(length(rotatedCRS)==1)
-      rotatedCRS = rotatedCRS[[1]]
-    return(rotatedCRS)
-  }
-  
   crs = crs(x)
   if(is.na(crs)){
     crs = crsLL
   }
-  if(is.character(crs))
-    crs = CRS(crs)
 
   # convert the centre to LL if necessary
-  if(!isLonLat(crs)) {
-      theCentre = SpatialPoints(
+  if(!terra::is.lonlat(crs)) {
+      theCentre = vect(
           t(theCentre[1:2]),
-          proj4string=crs
+          crs=crs
           )
-      theCentre = spTransform(theCentre, crsLL)
-      theCentre = as.vector(theCentre@coords)
+      theCentre = project(theCentre, crsLL)
+      theCentre = as.vector(terra::crds(theCentre))
   } # crs not LL
 
   
@@ -152,11 +138,11 @@ omerc = function(
     
     
     # make sure theCentre is at the origin
-   theCentreSp = SpatialPoints(t(theCentre), proj4string=crsLL)
+   theCentreSp = vect(t(theCentre), crs=crsLL)
    newxy = simplify2array(lapply(rotatedCRS, function(qq){
-          drop(spTransform(theCentreSp, qq)@coords)
+          drop(terra::crds(project(theCentreSp, qq)))
         }))
-    newxy = round(newxy)
+    newxy = round(newxy, digits)
     
     rotatedCRS = omercProj4string(
         lon=theCentre[1],
@@ -170,20 +156,20 @@ omerc = function(
     # preserve distances between points
     if(!is.null(preserve)) {
       # convert to LL
-      if(!isLonLat(crs(preserve))){
-        preserve = spTransform(preserve, crsLL)
+      if(!terra::is.lonlat(crs(preserve))){
+        preserve = project(preserve, crsLL)
       }
       # great circle distance
-	      distGS = spDists(preserve)*1000
+	      distGS = as.matrix(terra::distance(preserve)*1000)
       theLower = lower.tri(distGS, diag=FALSE)
       distGS = distGS[theLower]
        # euclidean distance for each projection
       distEu = unlist(lapply(rotatedCRS,
               function(crs){
                 mean(
-                    spDists(
-                        spTransform(preserve, crs)
-                )[theLower]/distGS,
+                    as.matrix(terra::distance(
+                        project(preserve, crs)
+                ))[theLower]/distGS,
                     na.rm=TRUE)
               }
           ))
@@ -202,8 +188,8 @@ omerc = function(
           lapply(rotatedCRS,
               function(crs){
                 sqrt(mean(
-                        (spDists(spTransform(preserve, crs)
-                              )[theLower]/distGS
+                        (terra::distance(project(preserve, crs)
+                              )/distGS
                               -1)^2,
                         na.rm=TRUE))
               }
@@ -241,9 +227,9 @@ omerc = function(
       
       xTrans = mapply(
           function(CRSobj) {
-            abs(prod(apply(bbox(
-                            spTransform(x, CRSobj)           
-                        ), 1, diff)
+            prod(abs(diff(terra::ext(
+                            project(x, CRSobj)           
+                        ))[-2]
                 ))
           },
           CRSobj=rotatedCRS
@@ -281,7 +267,7 @@ omerc = function(
       }
       if(!is.null(objectiveResult))
         attributes(rotatedCRS)$obj = objectiveResult
-      return(rotatedCRS)
+#      return(rotatedCRS)
     }
     
 # otherwise find a better inverse angle
@@ -302,23 +288,23 @@ omerc = function(
     )
     # a pair of points which should be 
   # north-south of each other
-    pointNorth = SpatialPoints(
+    pointNorth = vect(
         rbind(
             theCentre,
             theCentre + c(0, 0.1)
-        ), proj4string=crsLL
+        ), crs=crsLL
     )
  
     adjust = mapply(
         function(crs){
-          pn2 = spTransform(
+          pn2 = project(
               pointNorth,
               crs
               )
-          pn2@coords = round(pn2@coords)
+          pn2 = vect(round(terra::crds(pn2), digits), crs=crs)
               
           # find their distance in new projection
-          pnDist =apply(pn2@coords,2,diff)
+          pnDist =apply(terra::crds(pn2),2,diff)
           # and the angle they are from North-South
           -atan(pnDist[1]/pnDist[2])*360/(2*pi)
         },
@@ -327,7 +313,7 @@ omerc = function(
  
     inverseAngle = round(adjust, digits)
  
-  }
+  } # end post n orth
   
   if(post=='wide' | post=='tall' & (length(angle)==1)) {
     Sgamma = seq(-90,90,)
@@ -343,10 +329,9 @@ omerc = function(
     )
     bbarea = mapply(
         function(CRSobj) {
-          thebb = bbox(
-              spTransform(x, CRSobj)           
-          )
-          thebb = apply(thebb, 1, diff)
+          thebb = diff(as.vector(terra::ext(
+              project(x, CRSobj)           
+          )))[-2]
           c(area= abs(prod(thebb)),
               ratio = as.numeric(abs(thebb[2]/thebb[1]))
           )
@@ -382,8 +367,40 @@ omerc = function(
     rotatedCRS = rotatedCRS[[1]]
   }
 
-  if(!is.null(objectiveResult))
+  if(!is.null(objectiveResult)) {
     attributes(rotatedCRS)$obj = objectiveResult
+  }
   
-  rotatedCRS
+
+  equatorMeetsGreatCircle = geosphere::gcIntersectBearing(theCentre, angle, c(0,0), 90)
+  if(any(is.na(equatorMeetsGreatCircle)))
+  equatorMeetsGreatCircle = geosphere::gcIntersectBearing(theCentre, angle, c(0,0), -90)
+  if(any(is.na(equatorMeetsGreatCircle))) {
+    theY = 0
+  } else {
+  equatorMeetsGreatCircle = vect(matrix(equatorMeetsGreatCircle, ncol=2, byrow=TRUE), crs=crsLL)
+  equatorMeetsGreatCircleProj = project(equatorMeetsGreatCircle, rotatedCRS)
+  theY = terra::crds(equatorMeetsGreatCircleProj)[,2]
+  theY = theY[which.min(abs(theY))]
+  }
+
+
+#  theEllipse = terra::as.polygons(ext(c(-1.6e7, 1.6e7, -2e7, 2e7) + theY*c(0,0,1,1)), rotatedCRS)
+  theEllipse = terra::as.polygons(terra::ext(extentMerc + theY*c(0,0,1,1)), rotatedCRS)
+
+
+  if(ellipse) {
+  theBox = llCropBox(crs=rotatedCRS, ellipse = theEllipse, 
+      buffer.width=40*1000, densify.interval = 20*1000, 
+        crop.distance = Inf, crop.poles = FALSE, crop.leftright=TRUE,
+      remove.holes=TRUE)
+} else {
+  theBox = list(ellipse=theEllipse)
+}
+#  plot(project(worldMap, crsLL));plot(theBox$crop, col='red', add=TRUE)   
+
+  attributes(rotatedCRS)[names(theBox)] = theBox
+
+
+  return(rotatedCRS)
 }

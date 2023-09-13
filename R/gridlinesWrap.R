@@ -5,111 +5,67 @@ gridlinesWrap = function(crs,
 		ndiscr=40, plotLines=TRUE, 
 		plotLabels = TRUE, ...){
 	
-	if(any(easts==180)) easts = easts[easts > -180]
+	if(any(easts==180)) easts = setdiff(easts, -180)
 	norths = norths[abs(norths) < 90]
 	
 	pointPos = 2 # 1 for x direction
 	
+	crsOrig = crs
 	crsT = crs(crs)
 	
 	
-	glines = c(
-			mapply(function(qq, len){
-						Lines(
-								Line(cbind(qq, 
-												seq(-89,89,len=len))),
-								ID=paste("E",qq,sep=''))
-					}, qq=easts, len=ndiscr), 
-			mapply(function(qq, len){
-						Lines(
-								Line(cbind(
-												seq(-179,179,len=len), 
-												qq)
-								),
-								ID=paste("N",qq,sep='')
-						)
-					}, qq=norths, len=ndiscr)
-	)
-	
-	glines = SpatialLines(glines,
-			proj4string = crsLL
-	)
-	
-	
-	glinesT = wrapPoly(x=glines, crsT)
-	
-	ellipseSmall = attributes(crsT)$ellipse
-	if(!is.null(ellipseSmall)) {
-		ellipseSmall@polygons[[1]]@Polygons[[1]]@coords = 
-			0.99*ellipseSmall@polygons[[1]]@Polygons[[1]]@coords 
-			
-		glinesT = rgeos::gIntersection(
-		  spTransform(glinesT,crs(ellipseSmall)), 
-		  ellipseSmall, byid=TRUE)
-	}
-	glinesData=data.frame(
-			direction = substr(names(glinesT), 1,1),
-			degrees = as.numeric(gsub(
-							"^(E|N)|( (buffer|[[:digit:]]+))$", "",
-							names(glinesT))
-			),
-			stringsAsFactors=FALSE
-	)
-	theNeg = glinesData$degrees < 0
-	glinesData[theNeg, 'direction'] = 
-			c('W', 'S')[1+(glinesData[theNeg, 'direction']=='N')]
-	glinesData$degrees = abs(glinesData$degrees)
-	rownames(glinesData) = names(glinesT)
-	
-	glinesT = SpatialLinesDataFrame(
-			glinesT,
-			data=glinesData
-	)
-	
-	
-	fun1 = function(onedir) {		
-		lapply(
-				onedir@Lines, 
-				function(oneline) {
-				  result = oneline@coords[
-							which.max(abs(oneline@coords[,pointPos]))
-							,]
-				  result
-				}
-		)
-	}
-	
-	legendPoints = lapply(glinesT@lines, 
-			function(qq2) {
-				t(simplify2array(fun1(qq2)))
-			}
-	)
+	vertSeq = seq(-90,90,len=ndiscr)
+	vertLines = expand.grid(y=vertSeq, easts = easts)
+	vertLines = vect(as.matrix(vertLines[,c('easts','y')]), type='points', crs=crsLL, 
+		atts = data.frame(type='east', loc=vertLines[,'easts']))
+	vertLines = terra::split(vertLines,'loc')
+
+	horizSeq = seq(-180,180,len=2*ndiscr)
+	horizLines = expand.grid(x=horizSeq, norths = norths)
+	horizLines = vect(as.matrix(horizLines[,c('x','norths')]), type='points', crs=crsLL, 
+		atts =data.frame(type='east', loc=horizLines[,'norths']))
+	horizLines = terra::split(horizLines,'loc')
+
+	glines = vect(lapply(c(horizLines, vertLines), terra::as.lines))
+	terra::values(glines) = data.frame(type = rep(c('north','east'), c(length(norths), length(easts))), loc = c(norths, easts))
+	glines$neg = glines$loc < 0
+	glines$degrees = abs(glines$loc)
+	glines$direction = c(north="N",east="E")[glines$type]
+	glines[glines$type == 'north' & glines$neg, 'direction'] = 'S'
+	glines[glines$type == 'east' & glines$neg, 'direction'] = 'W'
+	terra::values(glines)$ID = paste0(glines$degrees, glines$direction)
+
+	if(!all(c('ellipse','crop') %in% names(attributes(crsOrig)))) {
+		ellipseAndCrop = llCropBox(crsOrig)
+		attributes(crsOrig)$ellipse = ellipseAndCrop$ellipse
+		attributes(crsOrig)$crop = ellipseAndCrop$crop
+	} 
+
+	glinesT = wrapPoly(x=glines, crsOrig)
+
+	glinesT = glinesT[terra::perim(glinesT)>0]
+
+	legendPoints = terra::centroids(glinesT, inside=TRUE)
 
 	# at most three labels per line
-	manyPoints = which(unlist(lapply(legendPoints, nrow)) > 3)
-	for(D in manyPoints) {
-	  legendPoints[[D]] = legendPoints[[D]][c(1, nrow(legendPoints[[D]])), ]
-	}
-		
-	legendDf = glinesT@data[rep(1:length(glinesT),
-					unlist(lapply(legendPoints, nrow))
-			),]
-	legendDf$label = paste(legendDf$degrees, legendDf$direction)
-	
-	legendPoints  = SpatialPoints(
-			do.call(rbind, legendPoints),
-			proj4string=crsT
-	)
-	rownames(legendDf) = names(legendPoints)
-	legendPoints = SpatialPointsDataFrame(
-			legendPoints, legendDf
-	)
-	
+	theTable = table(legendPoints$ID)
+	manyPoints = names(theTable[theTable > 3])
+	okPoints = which(! legendPoints$ID %in% manyPoints)
+
+	toTrim = data.frame(index = which(legendPoints$ID %in% manyPoints))
+	toTrim$ID = legendPoints$ID[toTrim$index]
+
+	okPoints = c(okPoints, unlist(lapply(split(toTrim$index, toTrim$ID), function(xx) xx[seq(from=1, len=3, by=pmax(1,floor(length(xx)/3)))] )))
+
+	legendPoints$minDist = apply(terra::distance(legendPoints, legendPoints), 2, function(xx) min(xx[xx>0]))
+
+
 	if(plotLines){
-		lines(glinesT, ...)
+		terra::plot(glinesT, add=TRUE, ...)
 	}		
 	if(plotLabels){
-		text(legendPoints, labels=legendPoints$label, ...)
+		legendPoints$isClose = legendPoints$minDist < strwidth('XX')
+		terra::text(legendPoints[!legendPoints$isClose], labels=legendPoints$ID[!legendPoints$isClose], halo=TRUE,  ...)
 	}
 	
 	invisible(list(

@@ -97,7 +97,7 @@ digits = digits,
 	res
 }
 
-colourScale.Raster = function(x=NULL, breaks=5, 
+colourScale.SpatRaster = function(x=NULL, breaks=5, 
 	style=c("quantile","equal","unique", "fixed"),
 	col="YlOrRd", opacity=1, dec=NULL, digits=6,
 	firstBreak=NULL, 
@@ -115,14 +115,14 @@ colourScale.Raster = function(x=NULL, breaks=5,
 		}
 	}
 
-
 	if(style == "equal") {
 		if(length(exclude)) {
-			x = unique(x)
+			x = unlist(terra::unique(x))
 		} else {
-			x = try(range(c(minValue(x), maxValue(x))), silent=TRUE)
+
+			x = try(range(terra::minmax(x)), silent=TRUE)
 			if(any(class(x)=='try-error'))
-				x = range(quantile(sampleRegular(x, size=NforSample)))
+				x = range(stats::quantile(unlist(terra::spatSample(x, size=pmin(terra::ncell(x), NforSample), method='regular'))))
 		}
 	} else if(style=='fixed') {
 		x = NULL
@@ -131,7 +131,8 @@ colourScale.Raster = function(x=NULL, breaks=5,
 	   # if labels is missing, take labels from the raster
 		if(is.null(labels)){
 
-				labels = levels(x)[[1]]
+				labels = terra::levels(x)[[1]]
+				if(identical(labels, "")) labels = NULL
 
 		}
 
@@ -188,9 +189,9 @@ colourScale.Raster = function(x=NULL, breaks=5,
 				label=as.character(labels)
 				)
 		} else { # different number of labels and breaks
-		levelsx = data.frame(
-			ID=sort(unique(x))
-			)
+
+		levelsx = data.frame(ID=sort(unlist(terra::unique(x))))
+
 		if(is.null(labels)) {
 			levelsx$label = as.character(levelsx$ID)
 		} else {
@@ -203,14 +204,13 @@ colourScale.Raster = function(x=NULL, breaks=5,
 		} # end different numbers of levels and breaks
 	} # levels not null
 	
-
-	if(ncell(x)<1e+06) {
-		x = freq(x, useNA='no')
+	if(terra::ncell(x)<1e+06) {
+		x = terra::freq(x)[,-1]
 		weights = x[,2]
 		x=x[,1]
 	} else {
 		weights = table(
-			sampleRegular(x, NforSample)
+			terra::spatSample(x, size=NforSample, method='regular')
 			)
 		x = as.numeric(names(weights))
 		if(!is.null(levelsx)) {
@@ -259,18 +259,25 @@ colourScale.Raster = function(x=NULL, breaks=5,
 	weights = levelsx$freq
 	x=levelsx$ID
 	labels = levelsx$label
-
+# end style unique
 } else { # not unique or equal or fixed, take a sample
+
 Nsample = 20000
 xVec= c()
-Diter = 0
-while(length(xVec)<Nsample & Diter < 5){
-	xVec = c(xVec,
-		na.omit(sampleRegular(x, min(c(ncell(x),Nsample))))
-		)
-	Diter = Diter + 1
+if(Nsample > terra::ncell(x)) {
+	xVec = terra::values(x)
+} else {
+	Diter = 0
+
+	while(length(xVec)<Nsample & Diter < 5){
+		xVec = c(xVec,
+			na.omit(terra::spatSample(x, size = min(c(terra::ncell(x),Nsample)), method='regular'))
+			)	
+		Diter = Diter + 1
+	}
 }
-x = c(xVec, maxValue(x), minValue(x))
+
+	x = c(xVec, as.vector(terra::minmax(x)))
 } # end if style== stuff
 
 res=colourScale(x, breaks, 
@@ -294,6 +301,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 	xOrig = x
 	style = style[1]
 	eps=0.01
+
 
 	 # radar colours
 	if(is.character(col)){
@@ -420,7 +428,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		names(colVec) =as.character(thetable$ID)
 		breaks = thetable$ID
 		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
-	} else { # not unique breaks
+	} else { # style not unique 
 
 
 	if(length(exclude) & length(x)) {
@@ -483,8 +491,9 @@ colourScale.numeric = function(x=NULL, breaks=5,
 xOrig = x
 x = transform[[1]](xOrig)
 
+
 if(style=="quantile"){
-	breaks = quantile(x, prob=seq(0,1,len=breaks[1]), na.rm=TRUE)
+	breaks = stats::quantile(x, prob=seq(0,1,len=breaks[1]), na.rm=TRUE)
 } else if(style=="equal"){
 	startHere = min(x, na.rm=TRUE)
 	if(is.null(transform) & !is.null(firstBreak) )	{
@@ -554,8 +563,8 @@ result = list(col=colVec, breaks=breaks, colOpacity=colForPlot)
 if(style=="unique") {
 	thetable$colOpacity = colForPlot
 
-	result$colourtable = rep(NA, max(thetable$ID)+1)
-	result$colourtable[1+thetable$ID] = thetable$colOpacity
+	result$colourtable = cbind(ID=thetable$ID, t(grDevices::col2rgb(thetable$col, alpha=TRUE)))
+
 	result$colortable = result$colourtable
 
 	if(length(xOrig))
@@ -578,7 +587,7 @@ result
 
 }
 
-colourScale.NULL = colourScale.numeric
+colourScale.NULL = function(...) {colourScale.numeric(...)}
 
 
 

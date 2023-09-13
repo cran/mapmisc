@@ -1,16 +1,16 @@
 
 getModisRaster = function() {
-  modisRaster = raster(
-    extent(-20015109.354,20015109.354,-10007554.677,10007554.677),
+  modisRaster = rast(
+    terra::ext(-20015109.354,20015109.354,-10007554.677,10007554.677),
     nrow=18, ncol=36,
     crs=crsModis		
   )
   
-  values(modisRaster)= 1:ncell(modisRaster)
+  terra::values(modisRaster)= 1:terra::ncell(modisRaster)
   modisDf = data.frame(
-    ID = values(modisRaster),
-    h=colFromCell(modisRaster, 1:ncell(modisRaster))-1,
-    v=rowFromCell(modisRaster, 1:ncell(modisRaster))-1
+    ID = terra::values(modisRaster),
+    h=terra::colFromCell(modisRaster, 1:terra::ncell(modisRaster))-1,
+    v=terra::rowFromCell(modisRaster, 1:terra::ncell(modisRaster))-1
   )
   modisDf$hString = sprintf("%02d", modisDf$h)
   modisDf$vString = sprintf("%02d", modisDf$v)
@@ -19,20 +19,20 @@ getModisRaster = function() {
     'h', modisDf$hString, 'v', modisDf$vString, sep=''
   )
   
-  modisRaster = as.factor(modisRaster)
+  modisRaster = terra::as.factor(modisRaster)
   levels(modisRaster) = list(modisDf)
   modisRaster
 }
 
 
 getDegreeRaster = function() {
-  degreeRaster = raster(
-    extent(c(-180,180,-90,90)),
+  degreeRaster = rast(
+    terra::ext(c(-180,180,-90,90)),
     res=1, crs=crsLL
   )
-  values(degreeRaster)=1:ncell(degreeRaster)  
+  terra::values(degreeRaster)=1:terra::ncell(degreeRaster)  
 # coordinate is bottom left
-  degreeMatXY = xyFromCell(degreeRaster, 1:ncell(degreeRaster)) - 0.5
+  degreeMatXY = terra::xyFromCell(degreeRaster, 1:terra::ncell(degreeRaster)) - 0.5
   degreeDf = data.frame(
     ID=1:nrow(degreeMatXY),
     x=degreeMatXY[,'x'],
@@ -46,23 +46,24 @@ getDegreeRaster = function() {
     stringsAsFactors=FALSE
   )
   degreeDf$tile = paste(degreeDf$ns, degreeDf$ew, sep='')
-  degreeRaster = ratify(degreeRaster)
-  levels(degreeRaster)[[1]] = degreeDf
+  levels(degreeRaster) = degreeDf
   degreeRaster
 }
 
-modisRaster = getModisRaster()
-degreeRaster = getDegreeRaster()
 
-getModisTiles = function(x, tiles = mapmisc::modisRaster) {
+getModisTiles = function(x, tiles) {
+ 
+  if(missing(tiles)) tiles = getDegreeRaster()
+
+  xModis = project(x, crs(tiles))
   
-  xModis = projectExtent(x, crs(tiles))
-  
-  modisCrop = crop(tiles, 
-    extend(extent(xModis), sqrt(.Machine$double.eps)), 
+  modisCrop = terra::crop(tiles, 
+    terra::extend(terra::ext(xModis), sqrt(.Machine$double.eps)), 
     snap='out')
 
-	res = factorValues(tiles, values(modisCrop))
+	res = terra::cats(tiles)[[1]]
+  names(res) = gsub("lyr.1", "ID", names(res))
+  res = res[match(terra::values(modisCrop), res$ID), ]
   
   res
 }

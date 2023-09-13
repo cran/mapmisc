@@ -18,8 +18,7 @@ gridlinesWrap(crs,
 
 \arguments{
   \item{crs}{
-A \code{CRS} object, proj4 string, or an object from which a projection 
-can be extracted with \code{proj4string(crs)}
+A character string representing a CRS
 }
 \item{easts}{vector of longitudes}
 \item{norths}{vector of latitudes}
@@ -32,28 +31,24 @@ for example \code{lty=2}
 }
 }
 
+\value{A list with elements \code{lines}, containg the graticule lines, and \code{points} containing the locations and labels for longitude and latitude values.}
+
 \author{
 Patrick Brown
 }
 
-\seealso{\code{\link[sp]{gridlines}}, \code{\link[rgdal]{llgrid}}}
+\seealso{\code{\link[terra]{graticule}}}
 
 \examples{
-\dontrun{
-Npoints = 20
-myPoints = SpatialPointsDataFrame(
-	cbind(
-	runif(Npoints, -15000000, 15000000), 
-	runif(Npoints, -8000000, 8000000)), 
-	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
-	y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)),
-	proj4string=moll(c(-100,0))
-)
+data('worldMap')
+worldMap = terra::unwrap(worldMap)
+crsMoll = moll(-100)
+worldMapT = wrapPoly(worldMap, crsMoll, buffer.width=200*1000)
 
+plot(attributes(crsMoll)$ellipse)
+plot(worldMapT, add=TRUE)
+gridlinesWrap(crsMoll, lty=3, col='red', cex=0.6)
 
-plot(myPoints)
-gridlinesWrap(myPoints, lty=3, col='red')
-}
 
 }
 

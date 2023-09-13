@@ -1,0 +1,189 @@
+<!--
+%\VignetteEngine{knitr::docco_linear}
+%\VignetteIndexEntry{Space Station Map Projections}
+%\VignetteEncoding{UTF-8}
+-->
+
+# Space Station Map Projections
+
+```{r setup}
+library('mapmisc', quietly=TRUE)
+library('terra')
+if(!exists('fact'))
+  fact = 1
+# uncomment for nicer images
+# fact = 2 
+
+```
+
+```{r mapmiscCache, echo=FALSE, purl=FALSE}
+  getOption('mapmiscCachePath')
+  getOption('mapmiscCacheReadOnly')
+```
+
+```{r data}
+worldMap = unwrap(worldMap)
+x = vect(cbind(130,15), crs=crsLL)
+
+if(FALSE) {
+  okinawa = geocode("Okinawa, Japan")
+  hk =  geocode("Hong Kong, China")
+  guam = geocode("Guam")
+} else {
+okinawa = unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(127.911468664084, 26.4748948), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Okinawa Island", 
+        orig = "Okinawa, Japan", type = "island", category = "place", 
+        importance = 0.544839401260831, place_id = 298674558L, 
+        osm_type = "relation", osm_id = 4098955L, display_name = "沖縄本島, 沖縄県, 日本", 
+        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L))))
+hk=unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(114.1849161, 22.350627), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Hong Kong", orig = "Hong Kong, China", 
+        type = "administrative", category = "boundary", importance = 0.964301726010044, 
+        place_id = 368735620L, osm_type = "relation", osm_id = 913110L, 
+        display_name = "香港 Hong Kong, 中国", place_rank = 6L), class = "data.frame", row.names = c(NA, -1L))))
+guam = unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(144.757551029721, 13.4501257), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Guam", orig = "Guam", 
+        type = "island", category = "place", importance = 0.799784943797409, 
+        place_id = 298225988L, osm_type = "relation", osm_id = 1152532L, 
+        display_name = "Guam, Chalan Pago-Ordot Municipality, Guam, United States", 
+        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L))))
+}
+```
+
+
+
+
+
+
+```{r projection}
+myProj = tpers(x=vect(c(x,hk)), hKm = 2*1000, tilt =-15, axis='seu')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+```{r mapLL}
+map.new(attributes(myProj)$regionLL, buffer=2)
+plot(attributes(myProj)$crop, add=TRUE, col='red')
+plot(project(worldMap, crsLL), add=TRUE)
+text(guam, 'guam')
+text(hk, 'hk')
+text(okinawa, 'Okinawa')
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r doProj} 
+  xProj = project(guam, myProj)
+  yProj = project(hk, myProj)
+  okinawaProj = project(okinawa, myProj)
+```
+
+
+
+
+```{r background}
+myMap = openmap(myProj,  zoom=2,fact=2)
+map.new(myProj, lwd=3)
+plot(myMap, add=TRUE)
+plot(wrapPoly(worldMap, myProj), add=TRUE)
+```
+
+
+
+```{r projOverDatelineNorth}
+myProjDateLine = tpers(x=c(175,75), azi=40, hKm = 2*1000, tilt =-15, axis='seu')
+myMapDateLine = openmap(myProjDateLine, zoom=2, fact=1)
+map.new(myProjDateLine)
+plot(myMapDateLine, add=TRUE)
+plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
+```
+
+
+```{r projOverDateline}
+myProjDateLine = tpers(x=c(-165,0), azi=-70, hKm = 30*1000, tilt =-15, axis='seu')
+myMapDateLine = openmap(myProjDateLine, zoom=2, fact=1, verbose=TRUE)
+map.new(myProjDateLine)
+plot(myMapDateLine, add=TRUE)
+plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
+```
+
+```{r projOverDatelineSouth}
+myProjDateLine = tpers(x=c(175,-85), azi=40, hKm = 20*1000, tilt =-15, axis='seu')
+myMapDateLine = openmap(myProjDateLine, zoom=2)
+map.new(myProjDateLine)
+plot(myMapDateLine, add=TRUE)
+plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
+```
+
+
+```{r backgroundOverDateline, include=FALSE, eval=FALSE, purl=FALSE}
+  
+  myMap1 = openmap(
+      x=attributes(myProj)$regionLL[1,],
+      crs=crsMerc, zoom=3,
+      path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+  
+  
+  myMap2 = openmap(
+      x=attributes(myProj)$regionLL[2,],
+      zoom=attributes(myMap1)$tiles$zoom,
+      crs=crsMerc,
+      path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+
+plot(myMap2)
+
+```
+
+
+
+```{r map}
+  map.new(myProj, bg='black', buffer=2*100*1000)
+  plot(myMap, add=TRUE)
+  plot(wrapPoly(worldMap, myProj), add=TRUE)  
+
+  gridlinesWrap(myProj, col='yellow', 
+      norths=seq(-40,40,by=10), easts=seq(-150,180,by=10),
+      lty=2)
+  
+  points(xProj, col='red', pch=16, cex=2)
+  text(xProj, 
+      as.character(xProj$name),
+      pos=2, col='red')
+  
+  points(okinawaProj, col='red', pch=16, cex=2)
+  text(okinawaProj, 
+      as.character(okinawaProj$name),
+      pos=2, col='red')
+  
+  points(yProj, col='red', pch=16, cex=2)
+  text(yProj, 
+      as.character(yProj$name),
+      pos=2, col='red')
+```

@@ -5,6 +5,7 @@ tpeqdProj4string = function(
     axis='enu',
     crs=TRUE) {
   
+
   res = paste(
       "+proj=tpeqd",
       " +lat_1=",lat1,
@@ -20,33 +21,43 @@ tpeqdProj4string = function(
       " +no_defs",sep=''
       )
   if(crs){
-    res = lapply(res, CRS)
+    res = lapply(res, crs)
   }
-  
+  res
 }
 
 tpeqd = function(x, offset=c(0,0), axis='enu'){
   
-  if(length(grep("^SpatialPoints", class(x)))){
-    if(!isLonLat(crs(x)) & 
-        requireNamespace('rgdal', quietly=TRUE)) {
-      x = spTransform(x, crsLL)
-    }
-    x = coordinates(x)
+  if(length(grep("^SpatVector", class(x)))){
+    x = project(x, crsLL)
+    x = terra::crds(x)
   }
   
   x = as.matrix(x)[1:2,1:2]
-  x = x[order(x[,2],decreasing=TRUE),]
+#  x = x[order(x[,2],decreasing=TRUE),]
+
+    # check if crossing -180
+    if(x[1,1] > x[2,1]) {
+      x[1,1] = x[1,1] - 360
+    }
+
   
   
   res= tpeqdProj4string(
       x[1,1],x[1,2],x[2,1],x[2,2],
       x=offset[1],y=offset[2],
-      axis=axis
+      axis=axis, crs=FALSE
       )
   if(length(res)[[1]])
     res = res[[1]]
       
+  theEllipse = vect(crsRegionEllipse(res, offset), crs=res, type='polygons')
+
+  thebox = suppressWarnings(llCropBox(res, ellipse = theEllipse, remove.holes=TRUE, crop.poles=TRUE))
+  res = terra::crs(res)
+   
+  attributes(res)[names(thebox)] = thebox
+
   res
   
 }

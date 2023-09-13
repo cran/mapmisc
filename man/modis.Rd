@@ -1,18 +1,18 @@
 \name{modis}
 \alias{modis}
 \alias{crsModis}
-\alias{modisRaster}
+\alias{getModisRaster}
 \alias{getModisTiles}
-\alias{degreeRaster}
+\alias{getDegreeRaster}
 \title{MODIS tiles and projection}
 \description{
 Raster containing MODIS tile ID's
 }
 \usage{
-getModisTiles(x, tiles = mapmisc::modisRaster)
+getModisTiles(x, tiles)
 crsModis
-modisRaster
-degreeRaster
+getModisRaster()
+getDegreeRaster()
 }
 \arguments{
 \item{x}{A spatial object which modis tiles will cover.}
@@ -20,43 +20,49 @@ degreeRaster
 }
 
 \details{
-	\code{getModisTiles} returns a matrix with modis tiles.
-
-	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
-	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
-	
-	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
+	Provides information on tiles which can be downloaded from MODIS.
 }
 
 
 
 \references{
-\url{https://nsidc.org/data/docs/daac/mod10_modis_snow/landgrid.html},
+\url{https://modis-land.gsfc.nasa.gov/MODLAND_grid.html},
 \url{https://spatialreference.org/ref/sr-org/modis-sinusoidal/}
 }
 
+
+\value{
+	\code{getModisTiles} returns a matrix with modis tiles.
+
+	\code{getModisRaster} shows horizontal and vertical tile names for downloading data from MODIS.
+	
+	\code{getDegreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
+}
 
 \examples{
 
 crsModis
 
-myPointLL = SpatialPoints(cbind(c(5:6),10:11), proj4string = crsLL)
+myPointLL = vect(cbind(c(5:6),10:11), crs = crsLL)
 
-if(requireNamespace("rgdal", quietly=TRUE)) {
-  getModisTiles(myPointLL)
 
-  getModisTiles(myPointLL, mapmisc::degreeRaster)
+getModisTiles(myPointLL)
+
+getModisTiles(myPointLL, getDegreeRaster())
+
+
+
+modisUrl = 	'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.061/2002.01.01/'
+desiredTiles = paste0("(",
+	paste(getModisTiles(myPointLL, getModisRaster())[,'tile'], collapse='|'), 
+	").*.hdf$")
+
+if(requireNamespace("RCurl", quietly=TRUE) & requireNamespace("XML", quietly=TRUE)) {
+theFiles = 	grep(desiredTiles,
+	XML::getHTMLLinks(RCurl::getURL(
+	    modisUrl,ftp.use.epsv=FALSE,
+	    dirlistonly = TRUE)), value=TRUE)
+paste0(modisUrl, theFiles)
 }
 
-modisUrl = 	'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
-
-\dontrun{
-paste(modisUrl,
-  grep(
-    paste(getModisTiles(myPointLL)[,'tile'], collapse='|'),
-    unlist(strsplit(RCurl::getURL(
-	    modisUrl,ftp.use.epsv=TRUE,
-	    dirlistonly = TRUE), '\\n')), 
-	  value=TRUE), sep='')
-}
 }
