@@ -92,7 +92,7 @@ plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
   plot(myMap, add=TRUE)
   plot(wrapPoly(worldMap, myProj), add=TRUE)  
 
-  gridlinesWrap(myProj, col='yellow', 
+  gridlinesWrap(myProj, col='orange', 
       norths=seq(-40,40,by=10), easts=seq(-150,180,by=10),
       lty=2)
   
