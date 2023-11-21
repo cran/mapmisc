@@ -130,10 +130,10 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 	   # if labels is missing, take labels from the raster
 		if(is.null(labels)){
-
-				labels = terra::levels(x)[[1]]
-				if(identical(labels, "")) labels = NULL
-
+			if(terra::is.factor(x)) {
+		        labels = merge(terra::levels(x)[[1]], terra::coltab(x)[[1]], by=1)
+			}
+			if(identical(labels, "")) labels = NULL
 		}
 
     # if labels is a data frame, use it
@@ -166,17 +166,17 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 				  # convert factor or numbers to character
 			levelsx$label = as.character(levelsx$label)
 
-			rgbCols = mapply(grep, 
+			rgbCols = unlist(mapply(grep, 
 				pattern=paste('^', c("red",'green','blue'), '$', sep=''),
 				MoreArgs = list(x=names(levelsx), ignore.case=TRUE)
-				)
+				))
 				  # if all three (rgb) are found
-			if(is.numeric(rgbCols)){
+			if(length(rgbCols)){
 				col = levelsx[,rgbCols, drop=FALSE]
 				breaks = nrow(col)
 			}
 
-			colCol = grep("^col$", colnames(levelsx), ignore.case=TRUE)
+			colCol = grep("^col$|^Color$|^Colour$", colnames(levelsx), ignore.case=TRUE)
 			if(length(colCol)) {
 				col = levelsx[,colCol]
 				breaks = length(col)
@@ -206,11 +206,12 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	
 	if(terra::ncell(x)<1e+06) {
 		x = terra::freq(x)[,-1]
-		weights = x[,2]
-		x=x[,1]
+		weights = x[,'count']
+		x=x[,'value']
 	} else {
+		terra::activeCat(x) = 'ID'
 		weights = table(
-			terra::spatSample(x, size=NforSample, method='regular')
+			unlist(terra::spatSample(x, size=NforSample, method='regular'))
 			)
 		x = as.numeric(names(weights))
 		if(!is.null(levelsx)) {
@@ -227,7 +228,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 		levelsx = data.frame(
 			ID=sort(x))
 	}
-	notInLevels = which(! x %in% levelsx$ID)
+	notInLevels = which(! (x %in% levelsx$ID | x %in% levelsx$label))
 	if(length(notInLevels)){
       # add more values to ID
 		toAdd = matrix(NA,
