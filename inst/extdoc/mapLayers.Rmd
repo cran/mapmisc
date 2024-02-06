@@ -1,0 +1,184 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Examples of map layers}
+-->
+
+
+# Examples of map layers
+
+
+This document will be incomplete if there is no
+internet connection when this document is compiled.  The full document is at
+[diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
+
+See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles 
+(not all of which are compatible with `mapmisc`).
+
+
+```{r setup, include=FALSE}
+library('knitr')
+library('mapmisc')
+
+knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+knitr::opts_chunk$set(dev='png')
+
+
+fact = 0.5
+allTiles = FALSE
+
+# uncomment for nicer images
+# fact = 1 
+# reRun = TRUE
+# or run in sandbox	
+# R --slave -e "knitr::knit('../pkg/mapmisc/vignettes/mapLayers.Rmd')" fact=1 allTiles=TRUE
+# pandoc --to=html5 --output=mapLayers.html mapLayers.md
+# cp -r figure ../www
+# cp -r mapLayers.html ../www
+theArgs = grep("^(fact|allTiles)=", commandArgs(), value=TRUE)
+for(D in theArgs)
+  eval(parse(text=D))
+
+opts_chunk$set(dpi=50*fact, 
+  dev.args=list(bg='white'))	
+
+cachePath = "/tmp/cacheLayers/"
+dir.create(cachePath, showWarnings=FALSE)
+
+theNames = names(osmTiles())
+
+```
+
+```{r theNames}
+theNames
+```
+
+
+```{r theExtent, include=FALSE}
+africaExtent = c(25, 25)
+trafalgarSquare=c(-0.128056,51.508056)
+stjohns=c(-52.683320, 47.566285)
+```
+
+
+```{r downloadTiles,include=FALSE}
+
+  theNames = grep("sputnik", theNames, invert=TRUE, value=TRUE)
+  print(theNames)
+  print(cachePath)
+
+  africaTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=africaExtent, zoom=2,
+    verbose=TRUE, 
+    crs = crsMerc, 
+    cachePath = cachePath))
+  
+  londonTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=trafalgarSquare,zoom=12, 
+    verbose=TRUE, 
+    crs = crsMerc, 
+    cachePath = cachePath))
+  
+  nfTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=stjohns, zoom=14,
+    verbose=TRUE, 
+    crs = crsMerc, 
+    cachePath = cachePath))
+  
+```
+
+
+The following are some examples of maps produced with `mymap=openmap(x, path="something")`
+
+```{r plotSetup, include=FALSE}
+mytiles = list(africa=africaTiles, london=londonTiles, newfoundland = nfTiles)
+theCap = rep(theNames, each=length(mytiles))
+```
+
+```{r someTiles, echo=FALSE, fig.ncol=3, out.width='32%', fig.cap = 'some tiles', fig.height=4, fig.width=4, dpi=120, fig.subcap = theCap}
+
+
+
+for(D in theNames){
+
+# cat("\n\n# ", D, "\n\n")
+
+      for(Dplot in names(mytiles)) {
+        map.new(mytiles[[Dplot]][[D]])
+        plot(mytiles[[Dplot]][[D]],add=TRUE, maxcells = 1e12)
+    }
+}
+```
+
+# Attributions
+
+```{r attributionsExample, echo=TRUE}
+openmapAttribution('osm', type='text', short=TRUE)
+openmapAttribution('osm', type='text', short=FALSE)
+```
+
+
+```{r theAttributions, echo=FALSE, results='asis'}
+for(D in theNames) {
+  cat("## ", D, '\n\n')
+    cat(openmapAttribution(D, 'html', short=TRUE), '\n\n')
+    cat(openmapAttribution(D, 'html', short=FALSE), '\n\n')
+}
+
+```
+
+```{r someTilesOld, eval=FALSE, echo=FALSE, results='asis', fig.height=5, fig.width=5}
+
+for(D in theNames){
+  Dsub = gsub("-",".", D)
+  
+  threeTiles = length(
+    grep(
+      paste("^", Dsub, "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+      names(mytiles[[1]])
+    )
+  ) == 3
+  
+  cat("\n\n# ", D, "\n\n")
+  cat("`plot", "RGB"[threeTiles], 
+    "(openmap(x,path=\"", D, "\"))`\n\n", 
+    sep='')
+  cat(openmapAttribution(D, 'html'), '\n\n')
+  
+  cat("\n|     |     |     |\n|-----|-----|-----|\n")
+  for(Dplot in 1:length(mytiles)) {
+    cat("|")
+    
+    oneTileName = grep(paste("^", Dsub, "$", sep=""), 
+      names(mytiles[[Dplot]]), value=TRUE)
+    threeTilesName = grep(paste("^", Dsub, 
+        "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+      names(mytiles[[Dplot]]),value=TRUE)
+    
+    if(length(threeTilesName)==3) { # plotRGB
+      map.new(mytiles[[Dplot]])
+      
+      plotRGB(mytiles[[Dplot]][[
+          paste(Dsub, c("Red","Green","Blue"),sep="")
+        ]],add=TRUE)
+      
+    } else if (length(oneTileName)==1){
+      
+      map.new(mytiles[[Dplot]])
+      plot(mytiles[[Dplot]][[oneTileName]],add=TRUE)
+      
+    } else {
+      
+      plot(0.5, 0.8)
+      text(0.5, 0.8, paste(D, "is\n not currently\navailable"))
+      
+    }
+    
+  }
+  cat("|")
+  
+}
+
+```
+
+
+

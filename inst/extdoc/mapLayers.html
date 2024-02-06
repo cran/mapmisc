@@ -1,0 +1,812 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Examples of map layers}
+-->
+<h1 id="examples-of-map-layers">Examples of map layers</h1>
+<p>This document will be incomplete if there is no internet connection
+when this document is compiled. The full document is at <a
+href="http://diseasemapping.r-forge.r-project.org">diseasemapping.r-forge.r-project.org</a>.</p>
+<p>See <a href="http://mc.bbbike.org/mc/">mc.bbbike.org/mc</a> for
+examples more map tiles (not all of which are compatible with
+<code>mapmisc</code>).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>theNames</span></code></pre></div>
+<pre><code>##  [1] &quot;osm&quot;               &quot;osm-fr&quot;            &quot;osm-de&quot;           
+##  [4] &quot;osm-transport&quot;     &quot;osm-bw&quot;            &quot;stamen-toner&quot;     
+##  [7] &quot;stamen-watercolor&quot; &quot;stamen-terrain&quot;    &quot;bvg&quot;              
+## [10] &quot;esri&quot;              &quot;esri-satellite&quot;    &quot;esri-natgeo&quot;      
+## [13] &quot;esri-overlay&quot;      &quot;esri-topo&quot;         &quot;kartogiraffe&quot;     
+## [16] &quot;osm-cyclemap&quot;      &quot;osm-seamap&quot;        &quot;landscape&quot;        
+## [19] &quot;rail&quot;              &quot;opentopomap&quot;       &quot;maptoolkit&quot;       
+## [22] &quot;waze&quot;              &quot;waze-us&quot;           &quot;humanitarian&quot;     
+## [25] &quot;cartodb&quot;           &quot;cartodb-nolabels&quot;  &quot;cartodb-dark&quot;     
+## [28] &quot;f4&quot;                &quot;nrcan&quot;             &quot;nrcan-text&quot;       
+## [31] &quot;nrcan-text-fr&quot;     &quot;spinal&quot;            &quot;neighbourhood&quot;    
+## [34] &quot;pioneer&quot;           &quot;mobile-atlas&quot;      &quot;sputnik&quot;          
+## [37] &quot;ump&quot;               &quot;where&quot;</code></pre>
+<p>The following are some examples of maps produced with
+<code>mymap=openmap(x, path="something")</code></p>
+<div id="tbl:someTiles">
+<table>
+<caption>Table 1: some tiles</caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-1.png"
+alt="osm" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-2.png"
+alt="osm" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-3.png"
+alt="osm" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">a) osm</td>
+<td style="text-align: center;">b) osm</td>
+<td style="text-align: center;">c) osm</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-4.png"
+alt="osm-fr" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-5.png"
+alt="osm-fr" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-6.png"
+alt="osm-fr" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">d) osm-fr</td>
+<td style="text-align: center;">e) osm-fr</td>
+<td style="text-align: center;">f) osm-fr</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-7.png"
+alt="osm-de" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-8.png"
+alt="osm-de" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-9.png"
+alt="osm-de" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">g) osm-de</td>
+<td style="text-align: center;">h) osm-de</td>
+<td style="text-align: center;">i) osm-de</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-10.png"
+alt="osm-transport" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-11.png"
+alt="osm-transport" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-12.png"
+alt="osm-transport" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">j) osm-transport</td>
+<td style="text-align: center;">k) osm-transport</td>
+<td style="text-align: center;">l) osm-transport</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-13.png"
+alt="osm-bw" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-14.png"
+alt="osm-bw" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-15.png"
+alt="osm-bw" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">m) osm-bw</td>
+<td style="text-align: center;">n) osm-bw</td>
+<td style="text-align: center;">o) osm-bw</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-16.png"
+alt="stamen-toner" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-17.png"
+alt="stamen-toner" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-18.png"
+alt="stamen-toner" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">p) stamen-toner</td>
+<td style="text-align: center;">q) stamen-toner</td>
+<td style="text-align: center;">r) stamen-toner</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-19.png"
+alt="stamen-watercolor" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-20.png"
+alt="stamen-watercolor" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-21.png"
+alt="stamen-watercolor" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">s) stamen-watercolor</td>
+<td style="text-align: center;">t) stamen-watercolor</td>
+<td style="text-align: center;">u) stamen-watercolor</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-22.png"
+alt="stamen-terrain" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-23.png"
+alt="stamen-terrain" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-24.png"
+alt="stamen-terrain" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">v) stamen-terrain</td>
+<td style="text-align: center;">w) stamen-terrain</td>
+<td style="text-align: center;">x) stamen-terrain</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-25.png"
+alt="bvg" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-26.png"
+alt="bvg" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-27.png"
+alt="bvg" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">y) bvg</td>
+<td style="text-align: center;">z) bvg</td>
+<td style="text-align: center;">NA) bvg</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-28.png"
+alt="esri" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-29.png"
+alt="esri" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-30.png"
+alt="esri" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) esri</td>
+<td style="text-align: center;">NA) esri</td>
+<td style="text-align: center;">NA) esri</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-31.png"
+alt="esri-satellite" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-32.png"
+alt="esri-satellite" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-33.png"
+alt="esri-satellite" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) esri-satellite</td>
+<td style="text-align: center;">NA) esri-satellite</td>
+<td style="text-align: center;">NA) esri-satellite</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-34.png"
+alt="esri-natgeo" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-35.png"
+alt="esri-natgeo" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-36.png"
+alt="esri-natgeo" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) esri-natgeo</td>
+<td style="text-align: center;">NA) esri-natgeo</td>
+<td style="text-align: center;">NA) esri-natgeo</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-37.png"
+alt="esri-overlay" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-38.png"
+alt="esri-overlay" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-39.png"
+alt="esri-overlay" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) esri-overlay</td>
+<td style="text-align: center;">NA) esri-overlay</td>
+<td style="text-align: center;">NA) esri-overlay</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-40.png"
+alt="esri-topo" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-41.png"
+alt="esri-topo" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-42.png"
+alt="esri-topo" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) esri-topo</td>
+<td style="text-align: center;">NA) esri-topo</td>
+<td style="text-align: center;">NA) esri-topo</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-43.png"
+alt="kartogiraffe" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-44.png"
+alt="kartogiraffe" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-45.png"
+alt="kartogiraffe" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) kartogiraffe</td>
+<td style="text-align: center;">NA) kartogiraffe</td>
+<td style="text-align: center;">NA) kartogiraffe</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-46.png"
+alt="osm-cyclemap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-47.png"
+alt="osm-cyclemap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-48.png"
+alt="osm-cyclemap" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) osm-cyclemap</td>
+<td style="text-align: center;">NA) osm-cyclemap</td>
+<td style="text-align: center;">NA) osm-cyclemap</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-49.png"
+alt="osm-seamap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-50.png"
+alt="osm-seamap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-51.png"
+alt="osm-seamap" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) osm-seamap</td>
+<td style="text-align: center;">NA) osm-seamap</td>
+<td style="text-align: center;">NA) osm-seamap</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-52.png"
+alt="landscape" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-53.png"
+alt="landscape" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-54.png"
+alt="landscape" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) landscape</td>
+<td style="text-align: center;">NA) landscape</td>
+<td style="text-align: center;">NA) landscape</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-55.png"
+alt="rail" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-56.png"
+alt="rail" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-57.png"
+alt="rail" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) rail</td>
+<td style="text-align: center;">NA) rail</td>
+<td style="text-align: center;">NA) rail</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-58.png"
+alt="opentopomap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-59.png"
+alt="opentopomap" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-60.png"
+alt="opentopomap" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) opentopomap</td>
+<td style="text-align: center;">NA) opentopomap</td>
+<td style="text-align: center;">NA) opentopomap</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-61.png"
+alt="maptoolkit" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-62.png"
+alt="maptoolkit" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-63.png"
+alt="maptoolkit" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) maptoolkit</td>
+<td style="text-align: center;">NA) maptoolkit</td>
+<td style="text-align: center;">NA) maptoolkit</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-64.png"
+alt="waze" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-65.png"
+alt="waze" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-66.png"
+alt="waze" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) waze</td>
+<td style="text-align: center;">NA) waze</td>
+<td style="text-align: center;">NA) waze</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-67.png"
+alt="waze-us" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-68.png"
+alt="waze-us" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-69.png"
+alt="waze-us" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) waze-us</td>
+<td style="text-align: center;">NA) waze-us</td>
+<td style="text-align: center;">NA) waze-us</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-70.png"
+alt="humanitarian" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-71.png"
+alt="humanitarian" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-72.png"
+alt="humanitarian" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) humanitarian</td>
+<td style="text-align: center;">NA) humanitarian</td>
+<td style="text-align: center;">NA) humanitarian</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-73.png"
+alt="cartodb" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-74.png"
+alt="cartodb" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-75.png"
+alt="cartodb" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) cartodb</td>
+<td style="text-align: center;">NA) cartodb</td>
+<td style="text-align: center;">NA) cartodb</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-76.png"
+alt="cartodb-nolabels" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-77.png"
+alt="cartodb-nolabels" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-78.png"
+alt="cartodb-nolabels" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) cartodb-nolabels</td>
+<td style="text-align: center;">NA) cartodb-nolabels</td>
+<td style="text-align: center;">NA) cartodb-nolabels</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-79.png"
+alt="cartodb-dark" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-80.png"
+alt="cartodb-dark" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-81.png"
+alt="cartodb-dark" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) cartodb-dark</td>
+<td style="text-align: center;">NA) cartodb-dark</td>
+<td style="text-align: center;">NA) cartodb-dark</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-82.png"
+alt="f4" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-83.png"
+alt="f4" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-84.png"
+alt="f4" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) f4</td>
+<td style="text-align: center;">NA) f4</td>
+<td style="text-align: center;">NA) f4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-85.png"
+alt="nrcan" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-86.png"
+alt="nrcan" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-87.png"
+alt="nrcan" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) nrcan</td>
+<td style="text-align: center;">NA) nrcan</td>
+<td style="text-align: center;">NA) nrcan</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-88.png"
+alt="nrcan-text" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-89.png"
+alt="nrcan-text" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-90.png"
+alt="nrcan-text" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) nrcan-text</td>
+<td style="text-align: center;">NA) nrcan-text</td>
+<td style="text-align: center;">NA) nrcan-text</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-91.png"
+alt="nrcan-text-fr" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-92.png"
+alt="nrcan-text-fr" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-93.png"
+alt="nrcan-text-fr" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) nrcan-text-fr</td>
+<td style="text-align: center;">NA) nrcan-text-fr</td>
+<td style="text-align: center;">NA) nrcan-text-fr</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-94.png"
+alt="spinal" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-95.png"
+alt="spinal" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-96.png"
+alt="spinal" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) spinal</td>
+<td style="text-align: center;">NA) spinal</td>
+<td style="text-align: center;">NA) spinal</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-97.png"
+alt="neighbourhood" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-98.png"
+alt="neighbourhood" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-99.png"
+alt="neighbourhood" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) neighbourhood</td>
+<td style="text-align: center;">NA) neighbourhood</td>
+<td style="text-align: center;">NA) neighbourhood</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-100.png"
+alt="pioneer" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-101.png"
+alt="pioneer" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-102.png"
+alt="pioneer" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) pioneer</td>
+<td style="text-align: center;">NA) pioneer</td>
+<td style="text-align: center;">NA) pioneer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-103.png"
+alt="mobile-atlas" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-104.png"
+alt="mobile-atlas" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-105.png"
+alt="mobile-atlas" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) mobile-atlas</td>
+<td style="text-align: center;">NA) mobile-atlas</td>
+<td style="text-align: center;">NA) mobile-atlas</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-106.png"
+alt="ump" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-107.png"
+alt="ump" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-108.png"
+alt="ump" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) ump</td>
+<td style="text-align: center;">NA) ump</td>
+<td style="text-align: center;">NA) ump</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><img src="figure/someTiles-109.png"
+alt="where" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-110.png"
+alt="where" /></td>
+<td style="text-align: center;"><img src="figure/someTiles-111.png"
+alt="where" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">NA) where</td>
+<td style="text-align: center;">NA) where</td>
+<td style="text-align: center;">NA) where</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="attributions">Attributions</h1>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openmapAttribution</span>(<span class="st">&#39;osm&#39;</span>, <span class="at">type=</span><span class="st">&#39;text&#39;</span>, <span class="at">short=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;copyright OpenStreetMap.org&quot;</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">openmapAttribution</span>(<span class="st">&#39;osm&#39;</span>, <span class="at">type=</span><span class="st">&#39;text&#39;</span>, <span class="at">short=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;copyright OpenStreetMap.org contributors. Data by OpenStreetMap.org available under the Open Database License (opendatacommons.org/licenses/odbl), cartography is licensed as CC BY-SA (see www.openstreetmap.org/copyright).&quot;</code></pre>
+<h2 id="osm">osm</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-fr">osm-fr</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-de">osm-de</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-transport">osm-transport</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-bw">osm-bw</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="stamen-toner">stamen-toner</h2>
+<p>© <a href="http://stamen.com">Stamen Design</a></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="stamen-watercolor">stamen-watercolor</h2>
+<p>© <a href="http://stamen.com">Stamen Design</a></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://creativecommons.org/licenses/by/3.0">CC
+BY-SA</a></p>
+<h2 id="stamen-terrain">stamen-terrain</h2>
+<p>© <a href="http://stamen.com">Stamen Design</a></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://creativecommons.org/licenses/by/3.0">CC
+BY-SA</a></p>
+<h2 id="bvg">bvg</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="esri">esri</h2>
+<p>©
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer">Esri
+and others</a></p>
+<p>Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri
+Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom,
+MapmyIndia, © OpenStreetMap contributors, and the GIS User Community see
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer">arcgisonline.com</a></p>
+<h2 id="esri-satellite">esri-satellite</h2>
+<p>©
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer">Esri
+and others</a></p>
+<p>Esri, Earthstar Geographics and others see
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer">arcgisonline.com</a></p>
+<h2 id="esri-natgeo">esri-natgeo</h2>
+<p>©
+<a href="https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer">Esri
+and others</a></p>
+<p>Esri, National Geographic and others see
+<a href="https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer">arcgisonline.com</a></p>
+<h2 id="esri-overlay">esri-overlay</h2>
+<p>©
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer">Esri
+and others</a></p>
+<p>Esri see
+<a href="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer">arcgisonline.com</a></p>
+<h2 id="esri-topo">esri-topo</h2>
+<p>©
+<a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">Esri
+and others</a></p>
+<p>Esri, HERE, DeLorme, TomTom, Intermap, increment P Corp., GEBCO,
+USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri
+Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, ©
+OpenStreetMap contributors, and the GIS User Community see
+<a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">arcgisonline.com</a></p>
+<h2 id="kartogiraffe">kartogiraffe</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-cyclemap">osm-cyclemap</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="osm-seamap">osm-seamap</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="landscape">landscape</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography by
+<a href="http://www.thunderforest.com/">Thunderforest</a></p>
+<h2 id="rail">rail</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="opentopomap">opentopomap</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="maptoolkit">maptoolkit</h2>
+<p>© <a href="http://www.toursprung.com">Toursprung GmbH</a></p>
+<p>© <a href="http://www.toursprung.com">Toursprung GmbH</a> Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="waze">waze</h2>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<h2 id="waze-us">waze-us</h2>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<h2 id="humanitarian">humanitarian</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography by
+<a href="http://hot.openstreetmap.org/about">Humanitarian OSM team</a>
+is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="cartodb">cartodb</h2>
+<p>© <a href="http://carto.com">CartoDB</a></p>
+<p>Map tiles by <a href="http://carto.com">CartoDB</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="cartodb-nolabels">cartodb-nolabels</h2>
+<p>© <a href="http://carto.com">CartoDB</a></p>
+<p>Map tiles by <a href="http://carto.com">CartoDB</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="cartodb-dark">cartodb-dark</h2>
+<p>© <a href="http://carto.com">CartoDB</a></p>
+<p>Map tiles by <a href="http://carto.com">CartoDB</a> under
+<a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Data
+by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="f4">f4</h2>
+<p>NA</p>
+<p>NA</p>
+<h2 id="nrcan">nrcan</h2>
+<p>© <a href="http://www.nrcan.gc.ca">Natural Resources Canada”</a></p>
+<p>Cartography by
+<a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The
+Canada Base Map - Transportation (CBMT) web mapping services of the
+Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a>
+licensed as the
+<a href="http://open.canada.ca/en/open-government-licence-canada">Open
+Government Licence - Canada</a>.</p>
+<h2 id="nrcan-text">nrcan-text</h2>
+<p>© <a href="http://www.nrcan.gc.ca">Natural Resources Canada”</a></p>
+<p>Cartography by
+<a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The
+Canada Base Map - Transportation (CBMT) web mapping services of the
+Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a>
+licensed as the
+<a href="http://open.canada.ca/en/open-government-licence-canada">Open
+Government Licence - Canada</a>.</p>
+<h2 id="nrcan-text-fr">nrcan-text-fr</h2>
+<p>© <a href="http://www.nrcan.gc.ca">Natural Resources Canada”</a></p>
+<p>Cartography by
+<a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The
+Canada Base Map - Transportation (CBMT) web mapping services of the
+Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a>
+licensed as the
+<a href="http://open.canada.ca/en/open-government-licence-canada">Open
+Government Licence - Canada</a>.</p>
+<h2 id="spinal">spinal</h2>
+<p>© <a href="http://thunderforest.com">Thunderforest</a></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a>
+under <a href="http://creativecommons.org/licenses/by/4.0">CC BY
+4.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>,
+available under the
+<a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="neighbourhood">neighbourhood</h2>
+<p>© <a href="http://thunderforest.com">Thunderforest</a></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a>
+under <a href="http://creativecommons.org/licenses/by/4.0">CC BY
+4.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>,
+available under the
+<a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="pioneer">pioneer</h2>
+<p>© <a href="http://thunderforest.com">Thunderforest</a></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a>
+under <a href="http://creativecommons.org/licenses/by/4.0">CC BY
+4.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>,
+available under the
+<a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="mobile-atlas">mobile-atlas</h2>
+<p>© <a href="http://thunderforest.com">Thunderforest</a></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a>
+under <a href="http://creativecommons.org/licenses/by/4.0">CC BY
+4.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>,
+available under the
+<a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a></p>
+<h2 id="ump">ump</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
+<h2 id="where">where</h2>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>
+contributors. Data by
+<a href="http://openstreetmap.org">OpenStreetMap</a>, available under
+the <a href="http://opendatacommons.org/licenses/odbl">Open Database
+License</a>, cartography is licensed as
+<a href="http://creativecommons.org/licenses/by-sa/2.0">CC
+BY-SA</a>.</p>
