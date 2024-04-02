@@ -1,7 +1,7 @@
 
 tonerToTrans = function(x, pattern= "(red|green|blue)$", 
   power=0.5, col='black',
-  threshold=Inf) {
+  threshold=Inf, mostCommon=1) {
 
   if(all(terra::has.colors(x))) {
     xValues = terra::coltab(x)[[1]]    
@@ -16,9 +16,9 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
     warning("cant find RGB columns")
     Scol = grep("value$", colnames(xValues), invert=TRUE, value=TRUE)
   }
-  maxColorValue = max(xValues[,Scol])
+  maxColorValue = max(xValues[,Scol], na.rm=TRUE)
 
-  xMax = apply(xValues[,Scol,drop=FALSE], 1, min)
+  xMax = apply(xValues[,Scol,drop=FALSE], 1, min, na.rm=TRUE)
   if(threshold < maxColorValue)
     xMax[which(xMax > threshold)] = maxColorValue 
 
@@ -39,6 +39,8 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
     terra::values(result) = xUnique[match(xValues[,'alpha'], xUnique[,'alpha']), 'value']
   }
 
+
+
   if(is.character(col)) {
       col = drop(grDevices::col2rgb(col[1]))
   }
@@ -49,11 +51,26 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
       alpha=xUnique[,'alpha']
     )
 
+  xCommon = terra::freq(result)
+
+  xCommon= xCommon[
+    order(xCommon[,'count'], decreasing=TRUE)[mostCommon],
+    'value']
+  theColtab[which(theColtab[,1] %in% xCommon), 'alpha'] = 0
+
+
   terra::coltab(result) = theColtab
 
-  attributes(result)$tiles = attributes(x)$tiles
-  attributes(result)$openmap = attributes(x)$openmap
-  
+  cachePath = getOption('mapmiscCachePath')
+  if(is.null(cachePath)) {
+    cachePath = tempdir()
+  }
+
+
+  result = writeRasterMapTiles(result, 
+    filename = tempfile(tmpdir=cachePath, fileext='.png')
+  )
+
   attributes(result)$tiles$tonerToTrans = match.call()
   result
 }

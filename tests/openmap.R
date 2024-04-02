@@ -63,7 +63,21 @@ points(myPoints)
   mytiles = openmap(
     x=extend(myraster,1),
     zoom=thezoom)
-#		mycities = GNcities(extend(myraster,1),max=5)
+  terra::is.int(mytiles)
+
+  mytiles2 = rast(attributes(mytiles)$source)
+  has.RGB(mytiles2)
+  plot(mytiles2)
+  terra::is.int(mytiles2)
+
+  theFile = tempfile(fileext='.tif')
+  writeRaster(mytiles, theFile)
+  mytiles3 = rast(theFile)
+  has.RGB(mytiles3)
+  plot(mytiles3)
+  terra::is.int(mytiles3)
+
+
   myplot(myraster, myPoints)
 
 print(2)
@@ -165,5 +179,23 @@ print(12)
   points(cityHall, pch=3, col='blue',cex=4)
   scaleBar(mytiles, 'topleft', bty='n', col='red')
 #'  
+
+# transparency
+
+  secondMap = openmap(
+    c(-11, 9),
+    buffer=2, maxTiles = 5,
+    fact=2
+  )
+  transMap2 = tonerToTrans(secondMap, mostCommon=1:2, threshold = 200,
+    col = 'red')
+  map.new(transMap2, bg='green')
+  plot(transMap2, add=TRUE)
+
+  transMap3 = rast(attributes(transMap2)$source)
+  map.new(transMap2, bg='green')
+  plot(transMap2, add=TRUE)
+  
+
   
   if(!interactive()) dev.off()

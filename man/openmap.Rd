@@ -10,9 +10,9 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	  path="http://tile.openstreetmap.org/",
 	  maxTiles = 9, 
-	  crs=terra::crs(x),   
+	  crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),   
 	  buffer=0, fact=1, 
-	 verbose=getOption('mapmiscVerbose'),
+		verbose=getOption('mapmiscVerbose'),
 	  cachePath=getOption('mapmiscCachePath'),
 	  suffix=NULL
 )
@@ -92,7 +92,7 @@ plot(nldTiles)
 
 openmapAttribution('osm', short=TRUE, type='markdown')
 
-openmapAttribution("stamen-toner", type='text')
+openmapAttribution("stamen-watercolor", type='text')
 
 
 myraster = rast(matrix(1:100,10,10),extent=ext(8, 18, 0, 10), crs=crsLL)

@@ -35,7 +35,7 @@ data('worldMap')
 worldMap = unwrap(worldMap)
 
 ## ----osm----------------------------------------------------------------------
-map = openmap(x, path='osm',
+map = openmap(x, path='osm', verbose=TRUE,
     maxTiles=12, buffer=c(30,3), fact=fact)
   
 map.new(map)

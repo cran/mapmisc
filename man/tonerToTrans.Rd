@@ -8,7 +8,8 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf)
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5,
+	col='black',  threshold=Inf,  mostCommon=1)
 }
 \arguments{
   \item{x}{
@@ -19,11 +20,9 @@ tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  thresho
 }
 \item{col}{colour for resulting map}
 \item{threshold}{colours above this value are transparent}
+\item{mostCommon}{integer vector, the most common colours are converted to transparent}
 }
 
-\details{
-Intended for \code{'stamen-toner'} maps.
-}
 
 \value{
 A \code{SpatRast} with indexed colours
@@ -39,19 +38,24 @@ Patrick Brown
 }
 \examples{
 
-	data('worldMap');worldMap = unwrap(worldMap)
 
-	origMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',],
-	 path='cartodb-nolabels',   
-		buffer=100*1000
+	origMap = openmap(
+	   c(-11, 9),
+	  path='cartodb-nolabels',   
+		buffer=2, verbose=TRUE
 	)
+
+
 	oldpar=	map.new(origMap, bg='green')
 	plot(origMap, add=TRUE)
 	
-	transMap = tonerToTrans(origMap)
+	transMap = tonerToTrans(origMap, mostCommon=1)
 	names(transMap)
   map.new(transMap, bg='green')
 	plot(transMap, add=TRUE)
+
+
+
 	par(oldpar)
 
 

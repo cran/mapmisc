@@ -151,7 +151,7 @@ openmap = function(
   zoom, 
   path="http://tile.openstreetmap.org/",
   maxTiles = 9,
-  crs=terra::crs(x),
+  crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath'), 
@@ -163,7 +163,7 @@ openmap = function(
   verbose = max(c(0, verbose))
   
 
-  NtestCols = 100
+  NtestCols = 20
 
   
   if(!is.null(attributes(x)$ellipse) ) {
@@ -210,19 +210,20 @@ openmap = function(
           # assume buffer is in km
           # transform to merc , buffer, transform back
           outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
-          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crsMerc)
+          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crs=crsMerc)
           outPointsLL = project(outPointsMerc, crsOut)
           outExtent = terra::ext(outPointsLL)
 
-    } else {
+  } else {
           outExtent = terra::extend(outExtent, buffer)
-    }
-    if(terra::is.lonlat(crsOut)) {
+  }
+    
+  if(terra::is.lonlat(crsOut)) {
       outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
-    }
+  }
 
   testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
-  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+  testPoints = terra::as.points(terra::as.lines(testRast))
   testPointsMerc = project(testPoints, crsMerc)
 
   if(missing(zoom)) {
@@ -246,7 +247,7 @@ openmap = function(
   # create out raster
   # find average area of pixels in downloaded tiles
 
-    mercHere = .getRasterMerc(zoom)
+  mercHere = .getRasterMerc(zoom)
    if(identical(crsOut, crsMerc)) {
         # output crs is mercator, return tiles as-is
         outraster = terra::crop(mercHere, testRast, snap='out')
@@ -361,8 +362,6 @@ openmap = function(
     suffix = suffixOrig
 
 
-#  stuff <<- list(outraster, zoom, Durl, verbose, suffix, tileNames, cachePath)
-  # outraster = stuff[[1]];zoom=stuff[[2]]; path = stuff[[3]]; verbose=stuff[[4]]; suffix=stuff[[5]]; tileNames = stuff[[6]]; cachePath = stuff[[7]]
   result = try(
     getTiles(outraster, 
       zoom=zoom,
@@ -407,12 +406,7 @@ openmap = function(
       pathOrig=pathOrig,
       zoom=zoom
     )
-  } else {
-    attributes(result)$openmap = list(
-      path=path,
-      pathOrig=pathOrig,
-      zoom=zoom
-    )
+    return(result)
   }
 
 
@@ -420,7 +414,7 @@ openmap = function(
   # convert to greyscale
   if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
     theRange = unlist(terra::global(result, range))
-    if(is.integer(theRange) & all(theRange >= 0) & all(theRange < 256)) {
+    if( all(ceiling(theRange) == floor(theRange), na.rm=TRUE) & all(theRange >= 0) & all(theRange < 256)) {
       # 264 grey scale
       terra::coltab(result) = data.frame(value = seq(0,255), col = grDevices::grey(seq(0,1,len=256)) )
     } 
@@ -443,7 +437,17 @@ openmap = function(
     terra::values(result2) = newValues
     terra::coltab(result2) = theColTab
     result = result2
-}
+  }
+
+  result = writeRasterMapTiles(result, 
+    filename = tempfile(tmpdir=cachePath, fileext='.tif'))
+
+  attributes(result)$openmap = list(
+      path=path,
+      pathOrig=pathOrig,
+      zoom=zoom
+  )
+
   result
 }
 

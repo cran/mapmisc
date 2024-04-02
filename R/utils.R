@@ -1,3 +1,56 @@
+writeRasterMapTiles = function(x, filename, overwrite = TRUE,  ...) {
+    if(!length(filename)){
+    	return(x)
+    }
+
+  theTiles = attributes(x)$tiles
+  theOpenmap = attributes(x)$openmap
+
+
+  if(any(nrow(terra::coltab(x)[[1]])>256) ) {
+        # color table too big for png
+        # transparency will be dropped
+    filename = gsub("png$", "tif", filename)
+    x2 = terra::colorize(x, to = 'rgb', alpha=FALSE)
+    result = terra::writeRaster(x2, filename = filename,
+      datatype = 'INT1U', overwrite = overwrite, ...)
+  } else if(terra::has.RGB(x)) {
+    	# save rgb layers as tif
+      # drop transparency
+    	filename = gsub("png$", "tif", filename)
+      result = terra::writeRaster(x,  
+        datatype = 'INT1U',
+        filename=filename, overwrite=overwrite, ...)
+	} else if(terra::has.colors(x)) {
+    # write as png
+    filename = gsub("tif$", "png", filename)
+    # make colour table go to 255
+    coltabOrig = terra::coltab(x)[[1]]
+    origValues =coltabOrig[,1]
+    if(any(origValues > 255 | origValues < 0,na.rm=TRUE )) warning("raster values outside range 0 to 255")
+    newValues = setdiff(0:255, origValues)
+    if(length(newValues)) {
+        coltabToAdd = coltabOrig[rep(1, length(newValues)), ]
+        coltabToAdd[,1] = as.integer(newValues)         
+        coltabToAdd[,-1] = 0L
+        newColtab = rbind(coltabOrig, coltabToAdd)
+        newColtab = newColtab[order(newColtab[,1]),]
+        terra::coltab(x) = newColtab
+    }
+    result = terra::writeRaster(x, filename, 
+      datatype = 'INT1U', overwrite=overwrite, ...)
+  } else {
+    warning("no colour table or RGB")
+    result = terra::writeRaster(x, filename, 
+      overwrite=overwrite, ...)
+  }
+
+
+  attributes(result)$tiles = theTiles
+  attributes(result)$openmap = theOpenmap
+  attributes(result)$source = terra::sources(result)
+  result
+}
 
 
 .getRasterMerc = function(zoom) {
