@@ -132,20 +132,6 @@ osmTiles = function(name, xyz, suffix) {
 
 
 
-if(FALSE){
- x = vect(as.matrix(expand.grid(seq(-5e6,-1e6,len=100), seq(-3e6,3e6,len=100))), crs='EPSG:3573')
- xLL = project(x, crsLL)
- zoom=4
- theExt = ext(-6e6,6e6,-6e6,6e6)
- xx = openmap(
-  x=rast(theExt, res = (xmax(theExt)-xmin(theExt))/1200, crs=crs('EPSG:3031')),
-  path="https://stamen-tiles-d.a.ssl.fastly.net/toner/",  
-#  path="https://tiles.stadiamaps.com/styles/stamen_watercolor/", suffix='.jpg',
-  zoom=2, verbose=TRUE, fact=2)
-
-}
-
-
 openmap = function(
   x, 
   zoom, 
@@ -163,7 +149,7 @@ openmap = function(
   verbose = max(c(0, verbose))
   
 
-  NtestCols = 20
+  NtestCols = 100
 
   
   if(!is.null(attributes(x)$ellipse) ) {
@@ -192,43 +178,42 @@ openmap = function(
   
 
 # get extent of output
+# this ignores negatives
+  if(terra::is.lonlat(crsIn)) {
+    outExtent = terra::extend(terra::ext(x), buffer)
+  } else {
+extVect = as.vector(terra::ext(x))
+extVect= extVect + c(-1,1,-1,1) * rep_len(buffer, 4)
+outExtent = terra::ext(extVect)
+}
 
-# get output raster
-  extentTestRast = terra::extend(terra::ext(x), buffer)
+if(!identical(as.character(crsIn), as.character(crsOut))) {
+
+  extentTestRast = outExtent
   if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
       extentTestRast = terra::extend(extentTestRast, 1e-4)
   }
   testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
   testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
 
-  testPointsMerc = project(testPoints, crsMerc)
-  testPointsOut = terra::project(testPoints, crsOut)
+  testPointsOut = suppressWarnings(terra::project(testPoints, crsOut))
   outExtent= terra::ext(testPointsOut)
 
-# buffer
-  if(terra::is.lonlat(crsOut) & any(buffer > 90)) {
-          # assume buffer is in km
-          # transform to merc , buffer, transform back
-          outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
-          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crs=crsMerc)
-          outPointsLL = project(outPointsMerc, crsOut)
-          outExtent = terra::ext(outPointsLL)
+}
 
-  } else {
-          outExtent = terra::extend(outExtent, buffer)
-  }
+
+
     
   if(terra::is.lonlat(crsOut)) {
       outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
   }
 
-  testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
-  testPoints = terra::as.points(terra::as.lines(testRast))
-  testPointsMerc = project(testPoints, crsMerc)
+  testRast = rast(outExtent, 
+    res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
+  testPoints = suppressWarnings(terra::as.points(testRast))
+  testPointsMerc = suppressWarnings(terra::project(testPoints, crsMerc))
 
   if(missing(zoom)) {
-
-
     # get zoom
 
     zoom = 0
@@ -236,7 +221,8 @@ openmap = function(
     while(Ntiles <= maxTiles & zoom <= 18) {
       zoom = zoom + 1
       Ntilesm1 = Ntiles
-      Ntiles = length(unique(terra::cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
+      Ntiles = length(unique(terra::cellFromXY(
+        .getRasterMerc(zoom), terra::crds(testPointsMerc))))
     }
     zoom = zoom - 1
     if(verbose) cat("zoom is ", zoom, ", ", Ntilesm1, "tiles\n")
@@ -288,7 +274,6 @@ openmap = function(
   } # end not merc
 
 # cache
-
 
   if(is.null(cachePath)) {
     cachePath = tempdir()
@@ -372,33 +357,9 @@ openmap = function(
       cachePath = cachePath),
     silent=!verbose)
 
-  # fill in poles
-  # TO DO: doesn't work with omerc
-  thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
-  thePolesTrans = project(vect(thePoles, crs=crsLL, atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)])), crs(result))
-  thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
-  names(thePolesSplit) = unlist(lapply(thePolesSplit, function(xx) xx$pole[1]))
-  theHull = suppressWarnings(lapply(thePolesSplit, terra::convHull))
-  theHull = theHull[unlist(lapply(theHull, length))>1]
-
-  # replace NA's near north pole with values nearby
-  if(!is.null(theHull$north)) {
-    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='north'], ID=FALSE)
-    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
-
-    result = terra::mask(result, theHull$north, updatevalue = (toFill), inverse=TRUE)
-  }
-  if(!is.null(theHull$south)) {
-    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='south'], ID=FALSE)
-    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
-
-    result= terra::mask(result, theHull$south, updatevalue = unlist(toFill), inverse=TRUE)
-  }
-
-  if(any(class(result)=="try-error")){
+  if(all(is.na(values(result)))){
     message(paste(Durl, "not accessible"))
     # create an empty raster
-    result = outraster
     attributes(result)$openmap = list(
       tiles=NA,
       message=result,
@@ -408,6 +369,42 @@ openmap = function(
     )
     return(result)
   }
+
+
+  # fill in poles
+  thePoles = as.matrix(expand.grid(seq(-170, 180, len=100), 
+    as.vector(outer(c(-1,1),seq(83, 90, len=201)))))
+  thePoles = vect(thePoles, crs=crsLL, 
+    atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)]))
+  thePolesTrans = suppressWarnings(terra::project(thePoles, crs(result)))
+  thePolesTrans$cell = terra::cellFromXY(result, terra::crds(thePolesTrans))
+  thePolesTrans = thePolesTrans[!is.na(thePolesTrans$cell)]
+  thePolesTrans = thePolesTrans[!duplicated(thePolesTrans$cell), ,drop=FALSE]
+
+if(length(thePolesTrans)) {
+  thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
+  names(thePolesSplit) = unlist(lapply(thePolesSplit, function(xx) xx$pole[1]))
+
+
+  theBuffer = suppressWarnings(lapply(thePolesSplit, function(xx) {
+    unique(as.vector(terra::adjacent(result, xx$cell, directions=16, include=TRUE)))
+  } ))
+
+
+
+  # replace NA's near north pole with values nearby
+  for(Ddirection in names(theBuffer)) {
+    if(verbose) cat('poles: ', Ddirection, '\n')
+    extractHere = terra::extract(result, y=theBuffer[[Ddirection]])
+    cellsToFill = theBuffer[[Ddirection]][is.na(extractHere[,1])]
+    toFill = na.omit(extractHere[,1])
+
+    if(length(toFill) & length(cellsToFill)) {
+      toFill = as.numeric(names(sort(table(toFill), decreasing=TRUE))[1]) 
+      result[cellsToFill] = toFill
+    }
+  }
+}
 
 
   # if there's only one layer, and no colortable

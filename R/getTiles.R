@@ -55,7 +55,7 @@ getRasterNrcanDontNeed = function(zoom) {
     res=0.01
   )
   
-  worldNrcan = terra::project(worldLL, nrCrs, res=1000)
+  worldNrcan = suppressWarnings(terra::project(worldLL, nrCrs, res=1000))
   
   nrcanExtent = terra::ext(
     -4282638.06150141,
@@ -137,7 +137,7 @@ getTiles = function(
   
   samplePoints = rast(terra::ext(outraster), res= (terra::xmax(outraster)-terra::xmin(outraster))/NtestCols, crs=terra::crs(outraster))
   samplePoints = vect(terra::xyFromCell(samplePoints, 1:terra::ncell(samplePoints)), crs=terra::crs(outraster))
-  xMerc = terra::project(samplePoints, crsMerc)
+  xMerc = suppressWarnings(terra::project(samplePoints, crsMerc))
 
 
   SrowColFull = terra::cellFromXY(rasterSphere, terra::crds(xMerc))
@@ -182,6 +182,7 @@ getTiles = function(
       
     SrowCol$file = file.path(SrowCol$cache , SrowCol$tile )
     SrowCol$index = 1L:nrow(SrowCol)
+    SrowCol$bad = NA
   rasters = list()
 #  colourtableList = list()
   
@@ -233,7 +234,9 @@ getTiles = function(
           Dextent, nrows=256, ncols=256, crs=crsMerc
         )
         terra::values(thisimage) = NA
+        SrowCol[Drow, 'bad'] = TRUE
       } else {
+        SrowCol[Drow, 'bad'] = FALSE
         terra::crs(thisimage) = crsMerc
         terra::ext(thisimage) = Dextent
       }
@@ -367,9 +370,9 @@ getTiles = function(
       if(verbose) cat(Dcycle, ' ')
 
       ScellOut =  seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1) 
-      thisRow = terra::project(
+      thisRow = suppressWarnings(terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
-        crsMerc, partial=TRUE)
+        crsMerc, partial=TRUE))
       thisRowGeom = terra::geom(thisRow)[,c('x','y'), drop=FALSE]
 
       theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
@@ -394,16 +397,18 @@ getTiles = function(
 #                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
       })
 
-      for(D in names(outValuesHere)[-1])
-        names(outValuesHere[[D]]) = names(outValuesHere[[1]])
-      outValuesHere = as.matrix(do.call(rbind, outValuesHere))
-      outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
-      if(terra::inMemory(outraster)) {
-        terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
-      } else {
-        terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
-      } 
-
+      if(length(outValuesHere)) {
+        for(D in names(outValuesHere)[-1]) {
+          names(outValuesHere[[D]]) = names(outValuesHere[[1]])
+        }
+        outValuesHere = as.matrix(do.call(rbind, outValuesHere))
+        outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
+        if(terra::inMemory(outraster)) {
+          terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
+        } else {
+          terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
+        } 
+      }
     }
     if(verbose) cat(Dcycle, '\n')
 

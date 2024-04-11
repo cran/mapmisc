@@ -1,4 +1,5 @@
 #+ setup
+options(warn=1)
 
 library('mapmisc')
 
@@ -36,9 +37,10 @@ if(!interactive()) pdf("worldMap.pdf")
  plot(attributes(myCrsO)$crop, 
  	border='red', col='#0000FF10', add=TRUE)
 
-
+#x = myCrsO;zoom=1;fact=0.7;path='osm';crs = crs(x);buffer=0;verbose=TRUE;cachePath = tempdir();suffix=NULL  
 
  myMap = openmap(myCrsO, zoom=1, fact=0.7)
+
  map.new(myMap)
  plot(myMap, add=TRUE)
  plot(attributes(myCrsO)$ellipse, add=TRUE, border='black')
@@ -100,6 +102,11 @@ if(!interactive()) pdf("worldMap.pdf")
 	plot(xTcrop,add=TRUE, col='grey')
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
+
+
+	# check openmap
+	myMap = openmap(myCrsMoll)
+	plot(myMap)
 	
 	if(!interactive()) dev.off()
 	

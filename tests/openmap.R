@@ -1,5 +1,5 @@
 #+ setup
-
+options(warn=1)
 library('mapmisc')
 
 #if(!exists('mapmiscCachePath'))
@@ -65,10 +65,12 @@ points(myPoints)
     zoom=thezoom)
   terra::is.int(mytiles)
 
-  mytiles2 = rast(attributes(mytiles)$source)
-  has.RGB(mytiles2)
-  plot(mytiles2)
-  terra::is.int(mytiles2)
+  if(!is.null(attributes(mytiles)$source)) {
+    mytiles2 = rast(attributes(mytiles)$source)
+    has.RGB(mytiles2)
+    plot(mytiles2)
+    terra::is.int(mytiles2)
+  }
 
   theFile = tempfile(fileext='.tif')
   writeRaster(mytiles, theFile)
@@ -153,6 +155,7 @@ print(10)
   
   # specify different output crs
   mytiles = openmap(myPointsUTM, crs=crsLL)
+#  x = myPointsUTM;crs=crsLL;path='osm';maxTiles=9;buffer=0;fact=1;verbose=TRUE;cachePath=tempdir();suffix=NULL
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
 
@@ -177,7 +180,7 @@ print(12)
   map.new(mytiles)
   plot(mytiles, add=TRUE)
   points(cityHall, pch=3, col='blue',cex=4)
-  scaleBar(mytiles, 'topleft', bty='n', col='red')
+  scaleBar(mytiles, 'topright', bty='n', col='red')
 #'  
 
 # transparency
