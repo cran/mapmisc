@@ -1,4 +1,4 @@
-705d22bf268897963b6c2a08476649ec *DESCRIPTION
+7b90d907079e8fc85d85ee5242ab70ed *DESCRIPTION
 16638970adc3746fb47a80eb916748a4 *NAMESPACE
 2c827f60f84c32f5d18ecf29c039a6c4 *R/breaksForRates.R
 de2d1f59b2d085387f846df6dc7ed0e3 *R/col2html.R
@@ -6,7 +6,7 @@ de2d1f59b2d085387f846df6dc7ed0e3 *R/col2html.R
 b42061e6f20c751b156969eb87b268df *R/crs.R
 b6123a3b82cfc1efd2517b41766c3e06 *R/crsRegion.R
 f44e1fa55c2a10bad8337c4f19c21dde *R/geonames.R
-e6d578b4f6d7b860a87d34206f3c2410 *R/getTiles.R
+0a0ffc8067820f4ec5020c5aa8c09072 *R/getTiles.R
 22edccbe5a127e7fbfb650a6680a2196 *R/gridlinesWrap.R
 55a7464868bb99afe9377a8da3c123cb *R/hooks.R
 071433ccbd4ac2343fdd8c1d635c7dd5 *R/insetMap.R
@@ -17,7 +17,7 @@ e6d578b4f6d7b860a87d34206f3c2410 *R/getTiles.R
 71aa696ecc0e6d77850fb0dc8cd41024 *R/modis.R
 c19e14a9d9d6cd32c25bd6fb54f7dfb7 *R/moll.R
 139540d406194c75d45f9a823a5a0aa3 *R/omerc.R
-ff817298585b18507d061021380839c3 *R/openmap.R
+98a95f5b9b353ab1ad54a81d15ab0300 *R/openmap.R
 268bc92023f101e9097df8c28ede9668 *R/openmapAttribution.R
 6ec97f98a007072c7f1b86e18fec500b *R/scaleBar.R
 6a166b9a25239d2504a9b031b7cbb8f3 *R/tonerToTrans.R
@@ -35,10 +35,10 @@ e17100b49434b8b94d3accdc856f4f49 *inst/doc/mapmisc.Rnw
 dfe0f714c153d84a20454c6f2d00c826 *inst/doc/mapmisc.pdf
 4d9abbed1d21ce951667427dc86021c3 *inst/doc/north.R
 af07e6c1f4f6dbc3d584d915ece0ee07 *inst/doc/north.Rmd
-17453b78b909dc5eb381c7444b929496 *inst/doc/north.html
+cc9c73d212412111232b5f8d20972a4c *inst/doc/north.html
 f4008d48be0d1fc0e56589dcf27442c9 *inst/doc/perspective.R
 39b49f0e8b52d8594dbb4f517e58ec62 *inst/doc/perspective.Rmd
-1ed3c4cc03d3c9f4f9f8f4c620589d8c *inst/doc/perspective.html
+e073cf1eba64d06964d420ae02251130 *inst/doc/perspective.html
 8d4403cb0020e58e6dabbbb936609fee *inst/extdoc/Makefile
 657f66d53f25bf280e532a9300681e6f *inst/extdoc/mapLayers.Rmd
 c8885396847764663ccb720d3fba6170 *inst/extdoc/mapLayers.html
@@ -67,7 +67,7 @@ cab8022b23bc158364b04f9a6535cc04 *man/tpeqd.Rd
 12cbf14b4d5bf3a71fa4d917f2f55228 *tests/colourScale.R
 361026f6221a88fbc7d748cabbb8f431 *tests/omerc.R
 4bbfba6ace7f69e4606f9473460d0649 *tests/openmap.R
-1497c42f1df846e0cdc12b47619ac534 *tests/worldMap.R
+ffc5dc7ccbfefe8db5d60e12b96bf9fd *tests/worldMap.R
 7347c4aac33fe63e4e6b52e1dc5badd4 *vignettes/Makefile
 e17100b49434b8b94d3accdc856f4f49 *vignettes/mapmisc.Rnw
 af07e6c1f4f6dbc3d584d915ece0ee07 *vignettes/north.Rmd
