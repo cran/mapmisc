@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps
-Version: 2.1.0
-Date: 2024-04-15
+Version: 2.1.2
+Date: 2026-01-12
 Depends: terra, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics, geosphere
 Suggests: RColorBrewer, geonames, classInt, knitr
@@ -16,8 +16,8 @@ LazyData: true
 LazyDataCompression: xz
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-04-15 13:42:41 UTC; patrick
+Packaged: 2026-01-12 20:37:29 UTC; patrick
 Author: Patrick Brown [aut, cre, cph]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Repository: CRAN
-Date/Publication: 2024-04-16 06:20:03 UTC
+Date/Publication: 2026-01-12 21:10:02 UTC
