@@ -1,4 +1,4 @@
-d4c5a21de5b57a1208cb4c9a52d9b301 *DESCRIPTION
+ff8177c4ad1b91e2be35d918bfbf93cb *DESCRIPTION
 16638970adc3746fb47a80eb916748a4 *NAMESPACE
 2c827f60f84c32f5d18ecf29c039a6c4 *R/breaksForRates.R
 de2d1f59b2d085387f846df6dc7ed0e3 *R/col2html.R
@@ -24,7 +24,7 @@ e010146f9cbea90ad724d5a64885983a *R/omerc.R
 a63607a4ce7969052b434566c76411de *R/tpeqd.R
 a9dd6ffd4c82ba97aadee9601ae74d18 *R/tpers.R
 b5fc03a36f76196d2f4d3bcb4933b75c *R/utils.R
-27f0b9567e3c7ca2ec31d4e6cc8ec91f *R/wrapPoly.R
+21d3d502d507b27fe57bbf77e4a0ed67 *R/wrapPoly.R
 a3ee933df52d6a52ce5511e88530805f *build/vignette.rds
 27dbc49131608633a59cce04f798ea10 *data/isohedron.RData
 7acf01e3811503f6f75e8e47a764a82e *data/netherlands.RData
@@ -32,13 +32,13 @@ b37a35f964369b68bbb992c9fee79980 *data/worldMap.RData
 97eaba6b4cd6c31c18ecf77391c86b3c *inst/CITATION
 11781036cc985e923221d286bebb4177 *inst/doc/mapmisc.R
 e2760c1ee09611411c7a1417150b4388 *inst/doc/mapmisc.Rnw
-2fadf747750815d46c494df4b1cef623 *inst/doc/mapmisc.pdf
+29577151f9aa2f9338d9c2dd564d9f05 *inst/doc/mapmisc.pdf
 4d9abbed1d21ce951667427dc86021c3 *inst/doc/north.R
 af07e6c1f4f6dbc3d584d915ece0ee07 *inst/doc/north.Rmd
-88bcad39d02ea47311ac3eacb110b08b *inst/doc/north.html
+8f5f9f538c4568c3e5054f46a5cb69c4 *inst/doc/north.html
 f4008d48be0d1fc0e56589dcf27442c9 *inst/doc/perspective.R
 39b49f0e8b52d8594dbb4f517e58ec62 *inst/doc/perspective.Rmd
-28fab60cfa30da8f3ef7d984b4c72bd4 *inst/doc/perspective.html
+2c7403ad342b6566175678b5fde29a9b *inst/doc/perspective.html
 8d4403cb0020e58e6dabbbb936609fee *inst/extdoc/Makefile
 657f66d53f25bf280e532a9300681e6f *inst/extdoc/mapLayers.Rmd
 c4bd7e6e6a9db29f26fe1f8902322b1c *inst/extsrc/landastToronto.R
